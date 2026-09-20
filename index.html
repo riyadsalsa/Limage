@@ -1,0 +1,3428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Salon</title>
+<style>
+  :root{
+    --bg:#f4f6f8; --card:#fff; --line:#d9dee3; --text:#1c2530;
+    --muted:#7a8794; --accent:#c2185b; --accent2:#8e1247;
+    --grey:#e6e9ec; --greyText:#a6afb8; --danger:#c62828;
+    --slot:34px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:16px;line-height:1.35}
+  body{padding-bottom:80px}
+  h1,h2,h3{margin:0 0 8px 0;font-weight:700}
+  h1{font-size:20px} h2{font-size:17px} h3{font-size:15px}
+  button{font:inherit;cursor:pointer;border:1px solid var(--line);
+    background:var(--card);color:var(--text);border-radius:10px;
+    padding:10px 14px;min-height:44px}
+  button:active{transform:scale(0.98)}
+  button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  button.primary:active{background:var(--accent2)}
+  button.ghost{background:transparent}
+  button.danger{background:#fff;border-color:var(--danger);color:var(--danger)}
+  button.small{padding:6px 10px;min-height:34px;font-size:14px;border-radius:8px}
+  button.chip{padding:8px 14px;min-height:40px;border-radius:20px}
+  button.chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  input,select,textarea{font:inherit;width:100%;padding:10px;border:1px solid var(--line);
+    border-radius:10px;background:#fff;color:var(--text);min-height:44px}
+  input[dir="rtl"],textarea[dir="rtl"]{text-align:right}
+  label{display:block;font-size:13px;color:var(--muted);margin:10px 0 4px}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .row.tight{gap:6px}
+  .grow{flex:1}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:12px;margin:10px 0}
+  .muted{color:var(--muted)}
+  .small{font-size:13px}
+  .center{text-align:center}
+  .hidden{display:none !important}
+  .pill{display:inline-block;background:var(--grey);color:var(--text);
+    padding:2px 8px;border-radius:10px;font-size:12px;margin-left:4px}
+  .money{font-variant-numeric:tabular-nums;white-space:nowrap}
+
+  #errBanner{display:none;background:#c62828;color:#fff;padding:8px 12px;
+    font-size:12px;font-family:monospace;position:sticky;top:0;z-index:999;
+    white-space:pre-wrap;word-break:break-word}
+  #errBanner.on{display:block}
+
+  header{position:sticky;top:0;z-index:20;background:var(--accent);color:#fff;
+    padding:12px 14px;display:flex;align-items:center;gap:8px;
+    padding-top:calc(12px + env(safe-area-inset-top))}
+  header h1{flex:1;font-size:18px;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  header button{background:transparent;border-color:rgba(255,255,255,.4);color:#fff;
+    min-height:36px;padding:6px 10px;font-size:13px}
+  nav{position:sticky;top:0;z-index:19;background:#fff;border-bottom:1px solid var(--line);
+    display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  nav button{flex:0 0 auto;border:none;border-radius:0;background:transparent;
+    padding:12px 14px;color:var(--muted);border-bottom:3px solid transparent;min-height:48px}
+  nav button.on{color:var(--accent);border-bottom-color:var(--accent);font-weight:700}
+  main{padding:12px;max-width:900px;margin:0 auto}
+  section.tab{display:none}
+  section.tab.on{display:block}
+
+  .datebar{display:flex;align-items:center;gap:6px;background:var(--card);
+    border:1px solid var(--line);border-radius:12px;padding:6px;margin-bottom:10px}
+  .datebar input[type="date"]{flex:1;border:none;background:transparent}
+  .datebar button{min-height:38px;padding:6px 10px}
+
+  .gridWrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);
+    border-radius:12px;background:#fff}
+  table.dayGrid{border-collapse:collapse;width:100%;min-width:100%;table-layout:fixed}
+  table.dayGrid th,table.dayGrid td{border:1px solid var(--line);
+    font-size:12px;padding:0;vertical-align:top;height:var(--slot)}
+  table.dayGrid th{background:#f0f2f5;color:var(--muted);font-weight:600;
+    height:auto;padding:6px 4px;font-size:12px;position:sticky;top:0;z-index:2}
+  table.dayGrid th.timeCol,table.dayGrid td.timeCol{width:58px;min-width:58px;
+    background:#f7f9fb;color:var(--muted);text-align:center;font-size:11px;
+    position:sticky;left:0;z-index:1}
+  table.dayGrid th.timeCol{z-index:3;background:#eef1f4}
+  td.slot{position:relative;cursor:pointer}
+  td.slot:hover{background:#fafcff}
+  td.slot.grey{background:repeating-linear-gradient(45deg,#eceff2,#eceff2 6px,#e2e6ea 6px,#e2e6ea 12px);cursor:not-allowed}
+  td.slot.empOff{background:repeating-linear-gradient(45deg,#f6e7ea,#f6e7ea 6px,#eed6db 6px,#eed6db 12px);cursor:not-allowed}
+  .appt{position:absolute;left:1px;right:1px;top:1px;bottom:1px;
+    background:#e3f2fd;border-left:4px solid #1e88e5;border-radius:6px;
+    padding:4px 6px;font-size:11px;overflow:hidden;cursor:pointer;color:var(--text);
+    display:flex;flex-direction:column;gap:2px}
+  .appt .nm{font-weight:700;direction:rtl;text-align:right;font-size:12px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:14px}
+  .appt .sv{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#37474f}
+  .appt .tm{font-size:10px;color:var(--muted)}
+  .appt .pr{font-size:10px;color:#1b5e20;font-weight:600}
+  .appt .payCheck{position:absolute;top:3px;right:5px;font-size:12px;
+    color:#2e7d32;font-weight:700;line-height:1}
+  .appt.pay-unpaid{border-left-color:#1e88e5}
+  .appt.pay-partial{border-left-color:#f9a825;background:#fffdf5}
+  .appt.pay-paid{border-left-color:#2e7d32;background:#f1f8e9}
+  .empHeader{display:flex;flex-direction:column;align-items:center;gap:2px}
+  .empHeader .nmAr{direction:rtl;font-weight:700;font-size:13px}
+  .empHeader .specialty{font-size:10px;color:var(--muted)}
+  .empHeader .toggle{font-size:10px;padding:2px 6px;min-height:22px;border-radius:6px;margin-top:2px}
+  .empHeader.off{opacity:.55}
+
+  .calHead{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+  .calHead h2{flex:1;text-align:center;margin:0}
+  .calGrid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+  .calGrid .dow{text-align:center;font-size:11px;color:var(--muted);padding:4px 0;font-weight:600}
+  .calCell{aspect-ratio:1/1;border:1px solid var(--line);border-radius:8px;
+    background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    cursor:pointer;font-size:14px;position:relative;min-height:44px}
+  .calCell.other{opacity:.35}
+  .calCell.closed{background:#eceff2;color:var(--greyText)}
+  .calCell.today{border-color:var(--accent);border-width:2px}
+  .calCell.selected{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .calCell .dot{position:absolute;bottom:4px;width:5px;height:5px;border-radius:50%;background:#1e88e5}
+  .calCell.selected .dot{background:#fff}
+  .calCell .todayMark{position:absolute;top:3px;font-size:8px;color:var(--accent)}
+  .calCell.selected .todayMark{color:#fff}
+
+  .listRow{display:flex;align-items:center;gap:8px;padding:8px 4px;
+    border-bottom:1px solid var(--line)}
+  .listRow:last-child{border-bottom:none}
+  .listRow .nmAr{direction:rtl;font-weight:600;font-size:15px}
+  .listRow .meta{font-size:12px;color:var(--muted)}
+  .listRow .grow{min-width:0}
+
+  .backdrop{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:50;
+    display:flex;align-items:flex-end;justify-content:center}
+  .sheet{background:#fff;width:100%;max-width:520px;border-radius:16px 16px 0 0;
+    max-height:92vh;overflow:auto;padding:16px;
+    padding-bottom:calc(16px + env(safe-area-inset-bottom))}
+  .sheet h2{margin-top:0}
+  .sheet .closeX{position:absolute;top:8px;right:12px;background:transparent;
+    border:none;font-size:22px;color:var(--muted);min-height:auto;padding:4px 8px}
+  @media (min-width:600px){
+    .backdrop{align-items:center}
+    .sheet{border-radius:16px;max-height:88vh}
+  }
+
+  .steps{display:flex;gap:4px;margin-bottom:10px;flex-wrap:wrap}
+  .steps .st{font-size:11px;padding:3px 8px;border-radius:10px;background:var(--grey);
+    color:var(--muted)}
+  .steps .st.on{background:var(--accent);color:#fff}
+  .steps .st.done{background:#c8e6c9;color:#1b5e20}
+
+  .pickedList{background:#f7f9fb;border:1px dashed var(--line);border-radius:10px;
+    padding:8px;margin:8px 0;min-height:44px}
+  .pickedItem{display:flex;align-items:center;gap:6px;padding:6px 0;font-size:14px;
+    border-bottom:1px solid #eef1f4}
+  .pickedItem:last-child{border-bottom:none}
+  .pickedItem .ar{direction:rtl;font-weight:600}
+  .pickedItem button{min-height:30px;padding:2px 8px;font-size:12px}
+
+  .toast{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom));
+    left:50%;transform:translateX(-50%);background:#323232;color:#fff;
+    padding:10px 16px;border-radius:22px;z-index:100;font-size:14px;
+    max-width:90vw;text-align:center;opacity:0;transition:opacity .2s;pointer-events:none}
+  .toast.on{opacity:.95}
+
+  .totalsBar{background:#fff;border:1px solid var(--line);border-radius:12px;
+    padding:8px 10px;margin:10px 0;display:flex;gap:10px;flex-wrap:wrap;
+    font-size:14px;font-weight:600;align-items:center}
+  .totalsBar .t{display:flex;align-items:center;gap:4px}
+  .totalsBar .lbl{color:var(--muted);font-weight:400;font-size:12px}
+  .paidTag{font-size:11px;padding:2px 8px;border-radius:8px;
+    background:#e8f5e9;color:#1b5e20;font-weight:700}
+  .partialTag{font-size:11px;padding:2px 8px;border-radius:8px;
+    background:#fff8e1;color:#8d6e00;font-weight:700}
+  .unpaidTag{font-size:11px;padding:2px 8px;border-radius:8px;
+    background:#e3f2fd;color:#0d47a1;font-weight:700}
+
+  @media print{
+    header,nav,.datebar,.noPrint,.backdrop,#errBanner{display:none !important}
+    body{background:#fff;padding:0}
+    main{padding:0;max-width:100%}
+    .printSheet{padding:10px}
+    .printRow{border-bottom:1px solid #999;padding:8px 0;page-break-inside:avoid}
+    .printRow .ar{direction:rtl;font-weight:700;font-size:15px}
+    .printRow .time{font-weight:700;font-size:14px}
+    .printRow .svc{font-size:13px}
+    .printHead{font-size:16px;font-weight:700;margin-bottom:8px}
+    .printTotals{margin-top:14px;padding-top:10px;border-top:2px solid #000;
+      font-size:14px;font-weight:700}
+    .printTotals div{margin:3px 0}
+  }
+
+  .empty{padding:24px 12px;text-align:center;color:var(--muted);font-size:14px}
+  .hr{height:1px;background:var(--line);margin:10px 0}
+  .tag{display:inline-block;background:#eef1f4;border-radius:8px;padding:2px 8px;
+    font-size:12px;color:var(--muted);margin-right:4px}
+  .help{margin:6px 0;padding-left:22px}
+  .help li{margin:4px 0;line-height:1.4}
+
+  /* Wizard */
+  #wizard{position:fixed;inset:0;background:var(--bg);z-index:500;
+    overflow-y:auto;padding:16px;
+    padding-top:calc(16px + env(safe-area-inset-top));
+    padding-bottom:calc(16px + env(safe-area-inset-bottom))}
+  #wizard.hidden{display:none}
+  .wizBox{max-width:520px;margin:0 auto;background:#fff;border:1px solid var(--line);
+    border-radius:16px;padding:20px;box-shadow:0 4px 20px rgba(0,0,0,.06)}
+  .wizBox h1{color:var(--accent);font-size:22px;margin-bottom:4px}
+  .wizBox h2{font-size:16px;margin-top:14px}
+  .wizProg{display:flex;gap:6px;margin:12px 0 18px}
+  .wizProg .d{flex:1;height:5px;border-radius:3px;background:var(--grey)}
+  .wizProg .d.on{background:var(--accent)}
+  .dowGrid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:6px}
+  .dowGrid .dd{padding:10px 4px;text-align:center;border:1px solid var(--line);
+    border-radius:10px;background:#fff;font-size:13px;cursor:pointer;
+    min-height:44px;display:flex;align-items:center;justify-content:center}
+  .dowGrid .dd.on{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:700}
+  .curGrid{display:grid;grid-template-columns:1fr;gap:6px;margin-top:6px}
+  .curItem{display:flex;align-items:center;gap:10px;padding:12px;
+    border:1px solid var(--line);border-radius:10px;background:#fff;cursor:pointer}
+  .curItem.on{border-color:var(--accent);background:#fdf2f7}
+  .curItem .chk{width:22px;height:22px;border:2px solid var(--line);border-radius:5px;
+    display:flex;align-items:center;justify-content:center;flex:0 0 auto;font-weight:700;color:#fff}
+  .curItem.on .chk{background:var(--accent);border-color:var(--accent)}
+  .wizNav{display:flex;gap:8px;margin-top:20px}
+  .wizNav button{flex:1}
+</style>
+</head>
+<body>
+
+<div id="errBanner"></div>
+
+<!-- WIZARD (first-run setup) -->
+<div id="wizard" class="hidden">
+  <div class="wizBox">
+    <h1>Salon Setup</h1>
+    <div class="small muted">Welcome. Let's set up your salon in 4 short steps.</div>
+    <div class="wizProg">
+      <div class="d on" data-step="1"></div>
+      <div class="d" data-step="2"></div>
+      <div class="d" data-step="3"></div>
+      <div class="d" data-step="4"></div>
+    </div>
+    <div id="wizBody"></div>
+    <div class="wizNav">
+      <button id="wizBack">Back</button>
+      <button id="wizNext" class="primary">Next</button>
+    </div>
+  </div>
+</div>
+
+<header>
+  <h1 id="appTitle">Salon</h1>
+  <button id="btnToday" class="ghost">Today</button>
+</header>
+
+<nav id="tabs">
+  <button data-tab="day" class="on">Day</button>
+  <button data-tab="calendar">Calendar</button>
+  <button data-tab="clients">Clients</button>
+  <button data-tab="staff">Staff</button>
+  <button data-tab="services">Services</button>
+  <button data-tab="expenses">Expenses</button>
+  <button data-tab="monthly">Monthly</button>
+  <button data-tab="reports">Reports</button>
+  <button data-tab="help">Help</button>
+</nav>
+
+<main>
+  <section class="tab on" id="tab-day">
+    <div class="datebar noPrint">
+      <button id="prevDay" class="small">◀</button>
+      <input type="date" id="dayDate">
+      <button id="nextDay" class="small">▶</button>
+    </div>
+    <div id="dayBanner" class="center" style="margin:4px 0 10px;font-size:15px;font-weight:600"></div>
+    <div id="dayBannerSub" class="small muted center" style="margin:-6px 0 8px"></div>
+    <div class="gridWrap"><div id="dayGridHolder"></div></div>
+    <div id="dayTotals" class="totalsBar noPrint"></div>
+    <div class="row noPrint" style="margin-top:10px">
+      <button id="btnQuickAdd" class="primary grow">+ New Appointment</button>
+      <button id="btnPrintNext" class="grow">🖨 Print Day</button>
+    </div>
+  </section>
+
+  <section class="tab" id="tab-calendar">
+    <div class="calHead">
+      <button id="calPrev" class="small">◀</button>
+      <h2 id="calMonthLabel">—</h2>
+      <button id="calNext" class="small">▶</button>
+    </div>
+    <div class="card">
+      <div class="calGrid" id="calGrid"></div>
+      <div class="small muted" style="margin-top:8px">
+        Tap a day to toggle <b>open / closed</b>. Blue dot = has appointments.
+        Tap a different day to select it, then "Open selected day".
+      </div>
+      <div class="row" style="margin-top:8px">
+        <button id="calGoDay" class="primary small">Open selected day</button>
+        <button id="calResetDefaults" class="small">Reset to my defaults</button>
+      </div>
+      <div class="row" style="margin-top:6px">
+        <button id="calDebugOverrides" class="small">Show day overrides</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="tab" id="tab-clients">
+    <div class="row">
+      <input id="clientSearch" placeholder="Search name or phone…" class="grow">
+      <button id="btnAddClient" class="primary">+ Add</button>
+    </div>
+    <div class="card" id="clientsList"></div>
+  </section>
+
+  <section class="tab" id="tab-staff">
+    <div class="row">
+      <button id="btnAddStaff" class="primary grow">+ Add Employee</button>
+    </div>
+    <div class="card" id="staffList"></div>
+  </section>
+
+  <section class="tab" id="tab-services">
+    <div class="row">
+      <button id="btnAddService" class="primary grow">+ Add Service</button>
+    </div>
+    <div class="card" id="servicesList"></div>
+    <div class="small muted" style="padding:8px 4px">
+      Services marked <span class="tag">needs body part</span> will ask for a body part when booked.
+    </div>
+  </section>
+
+  <section class="tab" id="tab-expenses">
+    <div class="card">
+      <div class="row">
+        <button id="btnAddExpense" class="primary grow">+ Add Expense</button>
+        <button id="btnManageCats" class="small">Categories</button>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <label style="margin:0;flex:1">Filter</label>
+        <select id="expFilter" style="flex:2">
+          <option value="thisMonth">This month</option>
+          <option value="lastMonth">Last month</option>
+          <option value="thisYear">This year</option>
+          <option value="all">All</option>
+        </select>
+      </div>
+    </div>
+    <div id="expTotals" class="totalsBar"></div>
+    <div class="card" id="expList"></div>
+  </section>
+
+  <section class="tab" id="tab-monthly">
+    <div class="card">
+      <div class="row">
+        <button id="monPrev" class="small">◀</button>
+        <div class="grow center" id="monLabel" style="font-weight:700"></div>
+        <button id="monNext" class="small">▶</button>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <button id="btnMonCsv" class="primary grow">📄 Export month CSV</button>
+        <button id="btnMonPrint" class="grow">🖨 Print month</button>
+      </div>
+    </div>
+    <div id="monReport"></div>
+  </section>
+
+  <section class="tab" id="tab-reports">
+
+    <div class="card">
+      <h2>📄 Export day CSV</h2>
+      <div class="small muted">
+        One row per service for the chosen day, with totals at the bottom.
+        Perfect for printing and keeping as a daily record.
+      </div>
+      <label>Day to export</label>
+      <input type="date" id="exportDayDate">
+      <div class="row" style="margin-top:8px">
+        <button id="btnExportDayCsv" class="primary grow">Export day CSV</button>
+        <button id="btnPreviewDayCsv" class="grow">Preview on screen</button>
+      </div>
+      <div id="dayCsvPreview" style="margin-top:8px"></div>
+    </div>
+
+    <div class="card">
+      <h2>🖨 Print day sheet</h2>
+      <div class="small muted">Same content, formatted for printing.</div>
+      <label>Date to print</label>
+      <input type="date" id="printDate">
+      <div class="row" style="margin-top:8px">
+        <button id="btnPrintDate" class="primary">🖨 Print</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>🔍 Booked-on lookup</h2>
+      <div class="small muted">Show appointments <b>created/booked</b> on a given day.</div>
+      <label>Booked on date</label>
+      <input type="date" id="bookedOnDate">
+      <div class="row" style="margin-top:8px">
+        <button id="btnBookedOn" class="primary">Show</button>
+      </div>
+      <div id="bookedOnResult" style="margin-top:8px"></div>
+    </div>
+
+    <div class="card">
+      <h2>⚙️ Settings</h2>
+      <div class="small muted">Change salon name, closed days, or currencies.</div>
+      <div class="row" style="margin-top:8px">
+        <button id="btnReRunSetup" class="primary grow">Re-run Setup Wizard</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>💾 Backup &amp; restore</h2>
+      <div class="small muted">
+        Full copy of all app data (employees, clients, appointments, settings).
+        Use to move data to a new phone or recover after a reset.
+      </div>
+      <div class="row" style="margin-top:8px">
+        <button id="btnBackup" class="primary grow">⬇ Download JSON backup</button>
+      </div>
+      <div class="row" style="margin-top:6px">
+        <button id="btnRestore" class="small">⬆ Restore from JSON</button>
+        <input type="file" id="restoreFile" accept=".json,application/json" class="hidden">
+      </div>
+      <div class="row" style="margin-top:12px">
+        <button id="btnReset" class="danger small">⚠ Erase all data</button>
+      </div>
+    </div>
+
+  </section>
+
+  <section class="tab" id="tab-help">
+    <div class="card">
+      <h2>🧙 Setup wizard (first run)</h2>
+      <p class="small">
+        The first time you open the app, a wizard runs and asks for:
+      </p>
+      <ol class="help">
+        <li><b>Salon name</b> — appears in the header bar</li>
+        <li><b>Closed days</b> — tap the days your salon is closed each week (e.g. Sat + Mon). If you're open every day, tap none.</li>
+        <li><b>Currencies</b> — pick which currencies you accept (NIS, JD, USD). At least one required.</li>
+        <li><b>Business hours</b> — opening and closing time</li>
+      </ol>
+      <p class="small muted">
+        You can re-run the wizard any time from <b>Reports → Re-run Setup Wizard</b>.
+        Changing currencies later does not erase existing prices — old prices in a
+        currency you disable remain visible in past appointments and reports.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>Quick start (after setup)</h2>
+      <ol class="help">
+        <li><b>Staff tab</b> — add each employee: Arabic name, specialty, salary (NIS), commission %</li>
+        <li><b>Services tab</b> — add each service and its default price + currency</li>
+        <li><b>Expenses tab → Categories</b> — the 8 defaults are loaded; edit or add as needed</li>
+        <li>You're ready to take bookings</li>
+      </ol>
+    </div>
+
+    <div class="card">
+      <h2>Taking a booking (phone call)</h2>
+      <ol class="help">
+        <li>Go to <b>Day</b> tab, pick the date</li>
+        <li>Tap an empty slot on the grid</li>
+        <li>Pick client (or <b>+ New</b>)</li>
+        <li>Tap a service → pick employee → duration → price → <b>Add</b></li>
+        <li>Add more services if needed</li>
+        <li>Set start time and total minutes</li>
+        <li>Save</li>
+      </ol>
+    </div>
+
+    <div class="card">
+      <h2>When the client pays (after service)</h2>
+      <ol class="help">
+        <li>Tap the appointment on the day grid</li>
+        <li>Tap <b>💰 Mark as Paid</b></li>
+        <li>Enter amount received in each currency</li>
+        <li>Save — the block turns green with ✓</li>
+      </ol>
+      <p class="small muted">Partial payments are OK. Tap again to update or clear.</p>
+    </div>
+
+    <div class="card">
+      <h2>Recording an expense</h2>
+      <ol class="help">
+        <li><b>Expenses</b> tab → <b>+ Add Expense</b></li>
+        <li>Date, category, description, amount, currency</li>
+        <li>Mark <b>Paid</b> if already paid</li>
+        <li>Save</li>
+      </ol>
+    </div>
+
+    <div class="card">
+      <h2>End of day (do this every day)</h2>
+      <ol class="help">
+        <li><b>Reports → Export day CSV</b> — pick today → downloads a .csv</li>
+        <li>Open it in Numbers / Excel — or print it</li>
+        <li>File it, keep it</li>
+        <li><b>Reports → Download JSON backup</b> — save to iCloud Drive or email to yourself</li>
+      </ol>
+      <p class="small muted">The CSV is your readable daily record. The JSON is the safety net if the phone ever dies.</p>
+    </div>
+
+    <div class="card">
+      <h2>Monthly report</h2>
+      <p class="small">
+        <b>Monthly</b> tab shows: revenue (total / paid / outstanding), per-employee
+        revenue and commission, payroll (base + commission), expenses, and net per
+        currency. Use ◀ ▶ to change months.
+      </p>
+      <ul class="help">
+        <li><b>Export month CSV</b> — full report as a spreadsheet</li>
+        <li><b>Print month</b> — a clean printout</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>Salon open/closed days</h2>
+      <ul class="help">
+        <li>Your default closed days are set in the wizard.</li>
+        <li>In <b>Calendar</b>: greyed days = closed</li>
+        <li>Tap the <b>selected</b> day once to toggle open/closed</li>
+        <li>Tap a different day to select it, then tap again to toggle</li>
+        <li>Blue dot = day has appointments</li>
+        <li><b>Reset to my defaults</b> clears all manual overrides</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>Employee absence</h2>
+      <ul class="help">
+        <li><b>Planned vacation:</b> Staff → Vacation → set a date range</li>
+        <li><b>Emergency today:</b> Day tab → tap the ON button in the employee's column header → OFF</li>
+        <li>Absent employees appear greyed and cannot be booked</li>
+      </ul>
+    </div>
+
+    <div class="card" style="border-color:#c62828">
+      <h2 style="color:#c62828">⚠ Critical safety rules</h2>
+      <ol class="help">
+        <li><b>Never clear Edge's browsing data or cache</b> — it erases ALL salon data</li>
+        <li><b>Never delete this HTML file</b> from Files — that's the app</li>
+        <li><b>Back up the JSON at least once a week</b> — the only way to restore if the phone breaks</li>
+        <li>To move to a new phone: install the app there, then <b>Restore from JSON</b></li>
+      </ol>
+    </div>
+
+    <div class="card">
+      <h2>Restoring from a backup</h2>
+      <ol class="help">
+        <li>Open the app on the new or repaired phone</li>
+        <li><b>Reports → ⬆ Restore from JSON</b></li>
+        <li>Pick your latest backup file</li>
+        <li>Confirm — the app reloads with your data</li>
+      </ol>
+    </div>
+
+    <div class="card">
+      <h2>Currency notes</h2>
+      <ul class="help">
+        <li>You choose which currencies to enable in the wizard (NIS, JD, USD)</li>
+        <li>Prices can be in any enabled currency — mixed within one appointment is allowed</li>
+        <li>The app never converts between currencies — totals are shown per currency</li>
+        <li>Commission is a % of <b>paid</b> amounts, per currency</li>
+        <li>Salaries are entered in NIS only</li>
+        <li>Disabling a currency later does not delete old prices</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>If something looks wrong</h2>
+      <ul class="help">
+        <li>Red banner at top → screenshot it and send it for a fix</li>
+        <li>If the page ever looks blank → close and reopen the app</li>
+        <li>If a number is wrong → check the appointment's payment record; the app never guesses</li>
+      </ul>
+    </div>
+
+    <div class="card center">
+      <p class="small muted">Salon app — built for offline use on iPhone.<br>All data stays on this device.</p>
+    </div>
+  </section>
+
+  <div id="printArea" class="hidden"></div>
+</main>
+
+<div id="modalHolder"></div>
+<div id="toast" class="toast"></div>
+
+<script>
+/* ============================================================
+   SALON APP v4 — Part 2
+   Data layer, wizard, settings, calendar, staff, services,
+   expenses, monthly report engine
+   ============================================================ */
+
+var STORE_KEY = 'salon_app_v4';
+
+/* Master list of all possible currencies. The active set is
+   stored in DB.settings.enabledCurrencies. */
+var ALL_CURRENCIES = [
+  { code:'NIS', symbol:'₪',    label:'NIS (₪)' },
+  { code:'JD',  symbol:'د.أ',  label:'JD (د.أ)' },
+  { code:'USD', symbol:'$',    label:'USD ($)' }
+];
+
+/* Active currencies — computed from DB.settings.enabledCurrencies.
+   Falls back to all three before setup, but nothing renders then. */
+function activeCurrencies(){
+  var enabled = (DB && DB.settings && DB.settings.enabledCurrencies) || ['NIS'];
+  var out = [];
+  for(var i=0;i<ALL_CURRENCIES.length;i++){
+    for(var j=0;j<enabled.length;j++){
+      if(ALL_CURRENCIES[i].code === enabled[j]) out.push(ALL_CURRENCIES[i]);
+    }
+  }
+  if(!out.length) out = [ALL_CURRENCIES[0]];
+  return out;
+}
+/* Backwards-compatible alias — everything that used CURRENCIES now
+   reads from this getter so dynamic enabling works everywhere. */
+function currencyInfo(code){
+  for(var i=0;i<ALL_CURRENCIES.length;i++) if(ALL_CURRENCIES[i].code===code) return ALL_CURRENCIES[i];
+  return ALL_CURRENCIES[0];
+}
+function fmtMoney(amount, code){
+  var c = currencyInfo(code);
+  var n = Number(amount)||0;
+  var s = (Math.round(n*100)/100).toString();
+  return c.symbol + ' ' + s;
+}
+
+function uid(){ return Math.random().toString(36).slice(2,10) + Date.now().toString(36).slice(-4); }
+function pad(n){ return String(n).padStart(2,'0'); }
+function ymd(d){
+  if(typeof d === 'string') return d;
+  return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate());
+}
+function parseYmd(s){ var p=s.split('-').map(Number); return new Date(p[0], p[1]-1, p[2]); }
+function addDays(s, n){ var d=parseYmd(s); d.setDate(d.getDate()+n); return ymd(d); }
+function dowOf(s){ return parseYmd(s).getDay(); }
+function fmtHM(mins){
+  mins = Number(mins)||0;
+  return pad(Math.floor(mins/60)) + ':' + pad(mins%60);
+}
+function fmtDateLong(s){
+  var d = parseYmd(s);
+  var dows = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  var mons = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return dows[d.getDay()] + ', ' + mons[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+}
+function fmtDateTimeShort(ts){
+  if(!ts) return '';
+  var d = new Date(ts);
+  return pad(d.getHours()) + ':' + pad(d.getMinutes()) + ' · ' +
+         d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate());
+}
+function todayYmd(){ return ymd(new Date()); }
+function esc(s){
+  return String(s==null?'':s).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+
+/* ---------- Truly empty defaults ---------- */
+function defaultData(){
+  return {
+    employees: [],
+    services: [],
+    clients: [],
+    appointments: [],
+    expenses: [],
+    expenseCategories: ['Electricity','Phone','Rent','Water','Consumables','Coffee','Cleaning','Other'],
+    dayOverrides: {},
+    emergencyOff: {},
+    settings: {
+      setupDone: false,
+      salonName: '',
+      openHour: 9,
+      closeHour: 17,
+      slotMin: 15,
+      defaultClosedDOW: [],
+      enabledCurrencies: ['NIS']
+    }
+  };
+}
+
+var DB = loadDB();
+
+function loadDB(){
+  try{
+    var raw = localStorage.getItem(STORE_KEY);
+    if(!raw) return defaultData();
+    var d = JSON.parse(raw);
+    var defs = defaultData();
+    d.employees = d.employees || [];
+    d.services  = d.services  || [];
+    d.clients   = d.clients   || [];
+    d.appointments = d.appointments || [];
+    d.expenses = d.expenses || [];
+    d.expenseCategories = d.expenseCategories || defs.expenseCategories.slice();
+    d.dayOverrides = d.dayOverrides || {};
+    d.emergencyOff = d.emergencyOff || {};
+    var s = d.settings || {};
+    d.settings = {
+      setupDone: (s.setupDone === true),
+      salonName: s.salonName || '',
+      openHour: (s.openHour != null) ? s.openHour : defs.settings.openHour,
+      closeHour: (s.closeHour != null) ? s.closeHour : defs.settings.closeHour,
+      slotMin: defs.settings.slotMin,
+      defaultClosedDOW: s.defaultClosedDOW || [],
+      enabledCurrencies: (s.enabledCurrencies && s.enabledCurrencies.length) ? s.enabledCurrencies : ['NIS']
+    };
+    /* Migrate services */
+    for(var i=0;i<d.services.length;i++){
+      var sv = d.services[i];
+      if(sv.defaultPrice == null) sv.defaultPrice = 0;
+      if(!sv.currency) sv.currency = 'NIS';
+    }
+    /* Migrate employees */
+    for(var j=0;j<d.employees.length;j++){
+      var e = d.employees[j];
+      if(e.baseSalary == null) e.baseSalary = 0;
+      if(!e.salaryCurrency) e.salaryCurrency = 'NIS';
+      if(e.commissionPct == null) e.commissionPct = 0;
+      if(e.notes == null) e.notes = '';
+    }
+    return d;
+  }catch(e){
+    console.error('loadDB failed', e);
+    return defaultData();
+  }
+}
+function saveDB(){
+  try{ localStorage.setItem(STORE_KEY, JSON.stringify(DB)); }
+  catch(e){ toast('Save failed: '+e.message); }
+}
+
+var toastTimer=null;
+function toast(msg){
+  var t = document.getElementById('toast');
+  if(!t) return;
+  t.textContent = msg;
+  t.classList.add('on');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ t.classList.remove('on'); }, 2200);
+}
+
+function empById(id){ for(var i=0;i<DB.employees.length;i++) if(DB.employees[i].id===id) return DB.employees[i]; return null; }
+function svcById(id){ for(var i=0;i<DB.services.length;i++) if(DB.services[i].id===id) return DB.services[i]; return null; }
+function clientById(id){ for(var i=0;i<DB.clients.length;i++) if(DB.clients[i].id===id) return DB.clients[i]; return null; }
+function clientByPhone(ph){ for(var i=0;i<DB.clients.length;i++) if((DB.clients[i].phone||'')===ph) return DB.clients[i]; return null; }
+
+function isSalonClosed(dateYmd){
+  var ov = DB.dayOverrides[dateYmd];
+  if(ov === true) return false;
+  if(ov === false) return true;
+  var dflt = DB.settings.defaultClosedDOW || [];
+  return dflt.indexOf(dowOf(dateYmd)) >= 0;
+}
+function setSalonClosed(dateYmd, closed){
+  var dflt = DB.settings.defaultClosedDOW || [];
+  var defaultClosed = dflt.indexOf(dowOf(dateYmd)) >= 0;
+  if(closed === defaultClosed) delete DB.dayOverrides[dateYmd];
+  else DB.dayOverrides[dateYmd] = !closed;
+  saveDB();
+}
+
+function empOnVacation(empId, dateYmd){
+  var e = empById(empId); if(!e) return false;
+  var vs = e.vacations || [];
+  for(var i=0;i<vs.length;i++) if(dateYmd >= vs[i].from && dateYmd <= vs[i].to) return true;
+  return false;
+}
+function empEmergencyOff(empId, dateYmd){
+  return !!(DB.emergencyOff[dateYmd] && DB.emergencyOff[dateYmd][empId]);
+}
+function empAvailableOn(empId, dateYmd){
+  return !empOnVacation(empId, dateYmd) && !empEmergencyOff(empId, dateYmd);
+}
+function toggleEmpEmergency(empId, dateYmd){
+  DB.emergencyOff[dateYmd] = DB.emergencyOff[dateYmd] || {};
+  if(DB.emergencyOff[dateYmd][empId]) delete DB.emergencyOff[dateYmd][empId];
+  else DB.emergencyOff[dateYmd][empId] = true;
+  saveDB();
+}
+
+function apptsOnDate(dateYmd){
+  var out = [];
+  for(var i=0;i<DB.appointments.length;i++) if(DB.appointments[i].date === dateYmd) out.push(DB.appointments[i]);
+  out.sort(function(a,b){ return a.startMin - b.startMin; });
+  return out;
+}
+function empBusyRanges(empId, dateYmd, excludeApptId){
+  var out=[];
+  var list = apptsOnDate(dateYmd);
+  for(var i=0;i<list.length;i++){
+    var a = list[i];
+    if(excludeApptId && a.id===excludeApptId) continue;
+    var svcs = a.services || [];
+    for(var j=0;j<svcs.length;j++){
+      var s = svcs[j];
+      if(s.empId===empId) out.push({start:s.startMin, end:s.startMin+s.durationMin});
+    }
+  }
+  return out;
+}
+function rangesOverlap(a1,a2){ return a1.start < a2.end && a2.start < a1.end; }
+function empFreeForRange(empId, dateYmd, startMin, endMin, excludeApptId){
+  if(!empAvailableOn(empId, dateYmd)) return false;
+  var r = {start:startMin, end:endMin};
+  var busy = empBusyRanges(empId, dateYmd, excludeApptId);
+  for(var i=0;i<busy.length;i++) if(rangesOverlap(busy[i], r)) return false;
+  return true;
+}
+
+/* Payment totals per appointment */
+function apptPaymentTotals(a){
+  var totals = {}, paid = {};
+  var svcs = a.services || [];
+  for(var i=0;i<svcs.length;i++){
+    var s = svcs[i];
+    var c = s.currency || 'NIS';
+    if(totals[c] == null) totals[c] = 0;
+    totals[c] += Number(s.price)||0;
+  }
+  if(a.paid && typeof a.paid === 'object'){
+    for(var k in a.paid){
+      if(!Object.prototype.hasOwnProperty.call(a.paid,k)) continue;
+      if(paid[k] == null) paid[k] = 0;
+      paid[k] += Number(a.paid[k])||0;
+    }
+  }
+  var hasTotal = false, fullyPaid = true, anyPaid = false;
+  for(var c2 in totals){
+    if(!Object.prototype.hasOwnProperty.call(totals,c2)) continue;
+    var t = totals[c2]||0;
+    if(t <= 0) continue;
+    hasTotal = true;
+    var p = paid[c2]||0;
+    if(p > 0) anyPaid = true;
+    if(p + 0.001 < t) fullyPaid = false;
+  }
+  var status = 'unpaid';
+  if(hasTotal){
+    if(fullyPaid && anyPaid) status = 'paid';
+    else if(anyPaid) status = 'partial';
+  }
+  return { totals:totals, paid:paid, status:status };
+}
+
+function totalsBarHtml(tObj, pObj, label){
+  var html = '';
+  var curs = activeCurrencies();
+  for(var i=0;i<curs.length;i++){
+    var c = curs[i];
+    var t = tObj[c.code]||0;
+    var p = pObj[c.code]||0;
+    if(t===0 && p===0) continue;
+    html += '<div class="t money">' +
+      '<span class="lbl">'+(label||'')+' '+c.code+':</span> ' +
+      fmtMoney(t, c.code) +
+      (p>0 ? ' <span class="lbl">(paid '+fmtMoney(p,c.code)+')</span>' : '') +
+    '</div>';
+  }
+  if(!html) html = '<div class="muted small">No amounts recorded</div>';
+  return html;
+}
+
+function openSheet(html, opts){
+  opts = opts || {};
+  var holder = document.getElementById('modalHolder');
+  holder.innerHTML =
+    '<div class="backdrop" id="backdrop">' +
+      '<div class="sheet" role="dialog">' +
+        '<button class="closeX" id="sheetClose">✕</button>' +
+        html +
+      '</div>' +
+    '</div>';
+  var closeFn = function(){ holder.innerHTML=''; if(opts.onClose) opts.onClose(); };
+  document.getElementById('sheetClose').onclick = closeFn;
+  document.getElementById('backdrop').addEventListener('click', function(e){
+    if(e.target.id==='backdrop') closeFn();
+  });
+  return { close: closeFn };
+}
+function confirmDialog(msg, onYes){
+  openSheet(
+    '<h2>Confirm</h2><p>'+esc(msg)+'</p>' +
+    '<div class="row" style="margin-top:12px">' +
+      '<button class="grow" id="cNo">Cancel</button>' +
+      '<button class="primary grow" id="cYes">Yes</button>' +
+    '</div>'
+  );
+  document.getElementById('cNo').onclick = function(){ document.getElementById('sheetClose').click(); };
+  document.getElementById('cYes').onclick = function(){
+    document.getElementById('sheetClose').click();
+    if(onYes) onYes();
+  };
+}
+
+function showTab(name){
+  var tabs = document.querySelectorAll('nav button');
+  for(var i=0;i<tabs.length;i++) tabs[i].classList.toggle('on', tabs[i].dataset.tab === name);
+  var secs = document.querySelectorAll('section.tab');
+  for(var j=0;j<secs.length;j++) secs[j].classList.toggle('on', secs[j].id === 'tab-' + name);
+  if(name==='day' && window.renderDay) window.renderDay();
+  if(name==='calendar') renderCalendar();
+  if(name==='clients' && window.renderClients) window.renderClients();
+  if(name==='staff') renderStaff();
+  if(name==='services') renderServices();
+  if(name==='expenses') renderExpenses();
+  if(name==='monthly') renderMonthly();
+  if(name==='reports' && window.renderReports) window.renderReports();
+}
+document.getElementById('tabs').addEventListener('click', function(e){
+  var b = e.target.closest('button[data-tab]');
+  if(b) showTab(b.dataset.tab);
+});
+
+/* ============================================================
+   SETUP WIZARD
+   ============================================================ */
+var wizStep = 1;
+var wiz = {
+  salonName: '',
+  closedDOW: [],
+  enabledCurrencies: ['NIS'],
+  openHour: 9,
+  closeHour: 17
+};
+
+function showWizard(){
+  /* Preset from existing settings if re-running */
+  if(DB.settings.setupDone){
+    wiz.salonName = DB.settings.salonName || '';
+    wiz.closedDOW = (DB.settings.defaultClosedDOW || []).slice();
+    wiz.enabledCurrencies = (DB.settings.enabledCurrencies || ['NIS']).slice();
+    wiz.openHour = DB.settings.openHour;
+    wiz.closeHour = DB.settings.closeHour;
+    wizStep = 1;
+  }
+  document.getElementById('wizard').classList.remove('hidden');
+  renderWizard();
+}
+function hideWizard(){
+  document.getElementById('wizard').classList.add('hidden');
+}
+
+function renderWizard(){
+  var body = document.getElementById('wizBody');
+  var prog = document.querySelectorAll('.wizProg .d');
+  for(var i=0;i<prog.length;i++){
+    prog[i].classList.toggle('on', (i+1) <= wizStep);
+  }
+  var html = '';
+  if(wizStep === 1){
+    html += '<h2>Step 1 — Salon name</h2>' +
+      '<div class="small muted">This appears at the top of the app.</div>' +
+      '<label>Salon name</label>' +
+      '<input id="wizName" value="'+esc(wiz.salonName)+'" placeholder="e.g. Beauty Lounge">';
+  } else if(wizStep === 2){
+    html += '<h2>Step 2 — Closed days</h2>' +
+      '<div class="small muted">Tap the days your salon is normally closed. If you open every day, tap none.</div>' +
+      '<div class="dowGrid">';
+    var dows = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    for(var d=0;d<7;d++){
+      var on = wiz.closedDOW.indexOf(d) >= 0;
+      html += '<div class="dd'+(on?' on':'')+'" data-dow="'+d+'">'+dows[d]+'</div>';
+    }
+    html += '</div>';
+  } else if(wizStep === 3){
+    html += '<h2>Step 3 — Currencies</h2>' +
+      '<div class="small muted">Pick the currencies you accept. At least one is required.</div>' +
+      '<div class="curGrid">';
+    for(var c=0;c<ALL_CURRENCIES.length;c++){
+      var cur = ALL_CURRENCIES[c];
+      var on2 = wiz.enabledCurrencies.indexOf(cur.code) >= 0;
+      html += '<div class="curItem'+(on2?' on':'')+'" data-cur="'+cur.code+'">' +
+        '<div class="chk">'+(on2?'✓':'')+'</div>' +
+        '<div class="grow"><div style="font-weight:600">'+esc(cur.label)+'</div></div>' +
+      '</div>';
+    }
+    html += '</div>';
+  } else if(wizStep === 4){
+    html += '<h2>Step 4 — Business hours</h2>' +
+      '<div class="small muted">Open and close times for a normal day.</div>' +
+      '<label>Opening time</label>' +
+      '<input type="time" id="wizOpen" value="'+pad(wiz.openHour)+':00" step="1800">' +
+      '<label>Closing time</label>' +
+      '<input type="time" id="wizClose" value="'+pad(wiz.closeHour)+':00" step="1800">';
+  }
+  body.innerHTML = html;
+  /* Wire step-specific events */
+  if(wizStep === 2){
+    var dds = body.querySelectorAll('.dd');
+    for(var x=0;x<dds.length;x++){
+      (function(el){
+        el.onclick = function(){
+          var dv = Number(el.dataset.dow);
+          var idx = wiz.closedDOW.indexOf(dv);
+          if(idx >= 0) wiz.closedDOW.splice(idx,1);
+          else wiz.closedDOW.push(dv);
+          renderWizard();
+        };
+      })(dds[x]);
+    }
+  } else if(wizStep === 3){
+    var cis = body.querySelectorAll('.curItem');
+    for(var y=0;y<cis.length;y++){
+      (function(el){
+        el.onclick = function(){
+          var code = el.dataset.cur;
+          var idx = wiz.enabledCurrencies.indexOf(code);
+          if(idx >= 0){
+            if(wiz.enabledCurrencies.length <= 1){ toast('At least one currency required'); return; }
+            wiz.enabledCurrencies.splice(idx,1);
+          } else {
+            wiz.enabledCurrencies.push(code);
+          }
+          renderWizard();
+        };
+      })(cis[y]);
+    }
+  }
+  document.getElementById('wizBack').style.visibility = (wizStep === 1) ? 'hidden' : 'visible';
+  document.getElementById('wizNext').textContent = (wizStep === 4) ? 'Finish Setup' : 'Next';
+}
+
+document.getElementById('wizBack').onclick = function(){
+  if(wizStep > 1){ wizStep--; renderWizard(); }
+};
+document.getElementById('wizNext').onclick = function(){
+  /* Save step data */
+  if(wizStep === 1){
+    var nm = (document.getElementById('wizName').value || '').trim();
+    if(!nm){ toast('Please enter a salon name'); return; }
+    wiz.salonName = nm;
+  } else if(wizStep === 4){
+    var oh = document.getElementById('wizOpen').value;
+    var ch = document.getElementById('wizClose').value;
+    if(oh) wiz.openHour = Number(oh.split(':')[0]);
+    if(ch) wiz.closeHour = Number(ch.split(':')[0]);
+    if(wiz.closeHour <= wiz.openHour){ toast('Closing must be after opening'); return; }
+    /* Commit */
+    DB.settings.salonName = wiz.salonName;
+    DB.settings.defaultClosedDOW = wiz.closedDOW.slice();
+    DB.settings.enabledCurrencies = wiz.enabledCurrencies.slice();
+    DB.settings.openHour = wiz.openHour;
+    DB.settings.closeHour = wiz.closeHour;
+    DB.settings.setupDone = true;
+    saveDB();
+    hideWizard();
+    applySettingsToUI();
+    showTab('day');
+    toast('Setup complete');
+    return;
+  }
+  wizStep++;
+  renderWizard();
+};
+
+function applySettingsToUI(){
+  document.getElementById('appTitle').textContent = DB.settings.salonName || 'Salon';
+  document.title = (DB.settings.salonName || 'Salon');
+}
+
+/* ============================================================
+   CALENDAR
+   ============================================================ */
+var calYear = null, calMonth = null;
+var selectedDate = todayYmd();
+
+function renderCalendar(){
+  if(calYear==null){
+    var dd = parseYmd(selectedDate);
+    calYear = dd.getFullYear(); calMonth = dd.getMonth();
+  }
+  var dows = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  var mons = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  document.getElementById('calMonthLabel').textContent = mons[calMonth] + ' ' + calYear;
+
+  var first = new Date(calYear, calMonth, 1);
+  var startDow = first.getDay();
+  var daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
+  var prevMonthDays = new Date(calYear, calMonth, 0).getDate();
+
+  var html = '';
+  for(var d=0;d<dows.length;d++) html += '<div class="dow">'+dows[d]+'</div>';
+
+  var today = todayYmd();
+  for(var i=0;i<42;i++){
+    var dayNum, thisY=calYear, thisM=calMonth, other=false;
+    if(i < startDow){
+      dayNum = prevMonthDays - startDow + 1 + i;
+      thisM = calMonth - 1; other = true;
+      if(thisM < 0){ thisM = 11; thisY--; }
+    } else if(i >= startDow + daysInMonth){
+      dayNum = i - (startDow + daysInMonth) + 1;
+      thisM = calMonth + 1; other = true;
+      if(thisM > 11){ thisM = 0; thisY++; }
+    } else {
+      dayNum = i - startDow + 1;
+    }
+    var dateYmd = thisY + '-' + pad(thisM+1) + '-' + pad(dayNum);
+    var closed = isSalonClosed(dateYmd);
+    var apptsCount = apptsOnDate(dateYmd).length;
+    var classes = 'calCell';
+    if(other) classes += ' other';
+    if(closed) classes += ' closed';
+    if(dateYmd === today) classes += ' today';
+    if(dateYmd === selectedDate) classes += ' selected';
+    var dot = apptsCount ? '<span class="dot"></span>' : '';
+    var tm = (dateYmd===today) ? '<span class="todayMark">TODAY</span>' : '';
+    html += '<div class="'+classes+'" data-date="'+dateYmd+'">'+ tm + dayNum + dot + '</div>';
+  }
+  var grid = document.getElementById('calGrid');
+  grid.innerHTML = html;
+  var cells = grid.querySelectorAll('.calCell');
+  for(var c=0;c<cells.length;c++){
+    (function(cell){
+      cell.addEventListener('click', function(){
+        var d = cell.dataset.date;
+        if(selectedDate === d){
+          setSalonClosed(d, !isSalonClosed(d));
+        } else {
+          selectedDate = d;
+        }
+        renderCalendar();
+      });
+    })(cells[c]);
+  }
+}
+document.getElementById('calPrev').onclick = function(){
+  calMonth--; if(calMonth<0){ calMonth=11; calYear--; } renderCalendar();
+};
+document.getElementById('calNext').onclick = function(){
+  calMonth++; if(calMonth>11){ calMonth=0; calYear++; } renderCalendar();
+};
+document.getElementById('calGoDay').onclick = function(){
+  document.getElementById('dayDate').value = selectedDate;
+  showTab('day');
+};
+document.getElementById('calResetDefaults').onclick = function(){
+  confirmDialog('Clear all open/closed overrides for every day?', function(){
+    DB.dayOverrides = {}; saveDB(); renderCalendar(); toast('Reset done');
+  });
+};
+document.getElementById('calDebugOverrides').onclick = function(){
+  var keys = Object.keys(DB.dayOverrides);
+  if(!keys.length){ toast('No overrides saved'); return; }
+  var lines = [];
+  for(var i=0;i<keys.length;i++){
+    var k = keys[i];
+    var d = parseYmd(k);
+    var dows = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    lines.push(dows[d.getDay()] + ' ' + k + ' → ' +
+      (DB.dayOverrides[k] ? 'OPEN (override)' : 'CLOSED (override)'));
+  }
+  openSheet(
+    '<h2>Day Overrides</h2>' +
+    '<div class="small muted">These are days you manually toggled. They override your default closed days.</div>' +
+    '<div class="card small">' + lines.join('<br>') + '</div>' +
+    '<div class="row" style="margin-top:8px">' +
+      '<button class="grow" id="ovClose">Close</button>' +
+      '<button class="danger grow" id="ovClear">Clear All Overrides</button>' +
+    '</div>'
+  );
+  document.getElementById('ovClose').onclick = function(){ document.getElementById('sheetClose').click(); };
+  document.getElementById('ovClear').onclick = function(){
+    DB.dayOverrides = {}; saveDB();
+    document.getElementById('sheetClose').click();
+    renderCalendar();
+    toast('All overrides cleared');
+  };
+};
+
+/* ============================================================
+   STAFF
+   ============================================================ */
+function renderStaff(){
+  var holder = document.getElementById('staffList');
+  if(!DB.employees.length){ holder.innerHTML = '<div class="empty">No employees yet. Tap + Add Employee to begin.</div>'; return; }
+  var html = '';
+  for(var i=0;i<DB.employees.length;i++){
+    var e = DB.employees[i];
+    var salary = Number(e.baseSalary)||0;
+    var comm = Number(e.commissionPct)||0;
+    var salaryTxt = (salary > 0) ? fmtMoney(salary, 'NIS') + ' / month' : 'no salary';
+    var commTxt = (comm > 0) ? comm + '% commission' : 'no commission';
+    html +=
+      '<div class="listRow">' +
+        '<div class="grow">' +
+          '<div class="nmAr">'+esc(e.nameAr)+'</div>' +
+          '<div class="meta">'+esc(e.specialty||'—')+'</div>' +
+          '<div class="meta">'+esc(salaryTxt)+' · '+esc(commTxt)+'</div>' +
+          ((e.vacations||[]).length ? '<div class="meta">'+(e.vacations||[]).length+' vacation period(s)</div>' : '') +
+          (e.notes ? '<div class="small muted" style="margin-top:2px">'+esc(e.notes)+'</div>' : '') +
+        '</div>' +
+        '<button class="small" data-vac="'+e.id+'">Vacation</button>' +
+        '<button class="small" data-edit="'+e.id+'">Edit</button>' +
+        '<button class="small danger" data-del="'+e.id+'">Del</button>' +
+      '</div>';
+  }
+  holder.innerHTML = html;
+  var bs;
+  bs = holder.querySelectorAll('[data-edit]');
+  for(var j=0;j<bs.length;j++) bs[j].onclick = function(){ editEmployee(this.dataset.edit); };
+  bs = holder.querySelectorAll('[data-del]');
+  for(var k=0;k<bs.length;k++) bs[k].onclick = function(){ delEmployee(this.dataset.del); };
+  bs = holder.querySelectorAll('[data-vac]');
+  for(var m=0;m<bs.length;m++) bs[m].onclick = function(){ vacationSheet(this.dataset.vac); };
+}
+document.getElementById('btnAddStaff').onclick = function(){ editEmployee(null); };
+
+function editEmployee(id){
+  var e = id ? empById(id) : {
+    nameAr:'', specialty:'',
+    baseSalary: 0, salaryCurrency: 'NIS',
+    commissionPct: 0, notes: ''
+  };
+  openSheet(
+    '<h2>'+(id?'Edit':'Add')+' Employee</h2>' +
+    '<label>Arabic name</label>' +
+    '<input id="empName" dir="rtl" value="'+esc(e.nameAr)+'" placeholder="مثال: سهير">' +
+    '<label>Specialty (English)</label>' +
+    '<input id="empSpec" value="'+esc(e.specialty||'')+'" placeholder="e.g. Nails, APL, Hair">' +
+    '<div class="hr"></div>' +
+    '<label>Base salary per month (NIS)</label>' +
+    '<input id="empSalary" type="number" min="0" step="0.01" value="'+(e.baseSalary||0)+'" inputmode="decimal">' +
+    '<label>Commission % on paid revenue</label>' +
+    '<input id="empCommission" type="number" min="0" max="100" step="0.1" value="'+(e.commissionPct||0)+'" inputmode="decimal">' +
+    '<div class="small muted" style="margin-top:-4px">Example: 20 for 20%. Applies to paid amounts only.</div>' +
+    '<label>Notes (optional)</label>' +
+    '<input id="empNotes" value="'+esc(e.notes||'')+'" placeholder="e.g. joined Jan 2025">' +
+    '<div class="row" style="margin-top:12px">' +
+      '<button class="grow" id="empCancel">Cancel</button>' +
+      '<button class="primary grow" id="empSave">Save</button>' +
+    '</div>'
+  );
+  document.getElementById('empCancel').onclick = function(){ document.getElementById('sheetClose').click(); };
+  document.getElementById('empSave').onclick = function(){
+    var nameAr = document.getElementById('empName').value.trim();
+    var spec = document.getElementById('empSpec').value.trim();
+    var salary = Number(document.getElementById('empSalary').value)||0;
+    var comm = Number(document.getElementById('empCommission').value)||0;
+    var notes = document.getElementById('empNotes').value;
+    if(!nameAr){ toast('Name required'); return; }
+    if(comm < 0) comm = 0;
+    if(comm > 100) comm = 100;
+    if(id){
+      var emp = empById(id);
+      emp.nameAr = nameAr;
+      emp.specialty = spec;
+      emp.baseSalary = salary;
+      emp.salaryCurrency = 'NIS';
+      emp.commissionPct = comm;
+      emp.notes = notes;
+    } else {
+      DB.employees.push({
+        id: uid(), nameAr:nameAr, specialty:spec, vacations:[],
+        baseSalary: salary, salaryCurrency: 'NIS',
+        commissionPct: comm, notes: notes
+      });
+    }
+    saveDB();
+    document.getElementById('sheetClose').click();
+    renderStaff(); if(window.renderDay) window.renderDay();
+    toast('Saved');
+  };
+}
+function delEmployee(id){
+  var e = empById(id);
+  confirmDialog('Delete employee "'+e.nameAr+'"? Past appointments keep their record.', function(){
+    var out = [];
+    for(var i=0;i<DB.employees.length;i++) if(DB.employees[i].id!==id) out.push(DB.employees[i]);
+    DB.employees = out;
+    saveDB(); renderStaff(); if(window.renderDay) window.renderDay();
+    toast('Deleted');
+  });
+}
+function vacationSheet(id){
+  var e = empById(id);
+  var vacs = e.vacations || [];
+  var html = '<h2>Vacation — <span dir="rtl">'+esc(e.nameAr)+'</span></h2>';
+  html += '<label>From</label><input type="date" id="vacFrom">';
+  html += '<label>To</label><input type="date" id="vacTo">';
+  html += '<div class="row" style="margin-top:8px"><button class="primary grow" id="vacAdd">+ Add period</button></div>';
+  html += '<div class="hr"></div>';
+  if(!vacs.length) html += '<div class="small muted">No vacation periods yet.</div>';
+  else {
+    html += '<div class="small muted" style="margin-bottom:4px">Current periods:</div>';
+    for(var i=0;i<vacs.length;i++){
+      html += '<div class="listRow">' +
+        '<div class="grow small">'+esc(vacs[i].from)+' → '+esc(vacs[i].to)+'</div>' +
+        '<button class="small danger" data-rm="'+i+'">Remove</button>' +
+      '</div>';
+    }
+  }
+  openSheet(html);
+  document.getElementById('vacAdd').onclick = function(){
+    var f = document.getElementById('vacFrom').value;
+    var t = document.getElementById('vacTo').value;
+    if(!f || !t){ toast('Pick both dates'); return; }
+    if(t < f){ toast('End before start'); return; }
+    e.vacations = e.vacations || [];
+    e.vacations.push({ from:f, to:t });
+    saveDB();
+    document.getElementById('sheetClose').click();
+    vacationSheet(id);
+    renderStaff(); if(window.renderDay) window.renderDay();
+    toast('Vacation added');
+  };
+  var rmBs = document.querySelectorAll('[data-rm]');
+  for(var r=0;r<rmBs.length;r++){
+    (function(btn){
+      btn.onclick = function(){
+        var idx = Number(btn.dataset.rm);
+        e.vacations.splice(idx,1);
+        saveDB();
+        document.getElementById('sheetClose').click();
+        vacationSheet(id);
+        renderStaff(); if(window.renderDay) window.renderDay();
+        toast('Removed');
+      };
+    })(rmBs[r]);
+  }
+}
+
+/* ============================================================
+   SERVICES
+   ============================================================ */
+function renderServices(){
+  var holder = document.getElementById('servicesList');
+  if(!DB.services.length){ holder.innerHTML = '<div class="empty">No services yet. Tap + Add Service to begin.</div>'; return; }
+  var html = '';
+  for(var i=0;i<DB.services.length;i++){
+    var s = DB.services[i];
+    var price = s.defaultPrice ? fmtMoney(s.defaultPrice, s.currency) : '<span class="muted">no price</span>';
+    html +=
+      '<div class="listRow">' +
+        '<div class="grow">' +
+          '<div style="font-weight:600">'+esc(s.name)+'</div>' +
+          '<div class="meta">'+price + (s.needsBodyPart ? ' · <span class="tag">needs body part</span>' : '') + '</div>' +
+        '</div>' +
+        '<button class="small" data-edit="'+s.id+'">Edit</button>' +
+        '<button class="small danger" data-del="'+s.id+'">Del</button>' +
+      '</div>';
+  }
+  holder.innerHTML = html;
+  var bs = holder.querySelectorAll('[data-edit]');
+  for(var j=0;j<bs.length;j++) bs[j].onclick = function(){ editService(this.dataset.edit); };
+  bs = holder.querySelectorAll('[data-del]');
+  for(var k=0;k<bs.length;k++) bs[k].onclick = function(){ delService(this.dataset.del); };
+}
+document.getElementById('btnAddService').onclick = function(){ editService(null); };
+
+function editService(id){
+  var s = id ? svcById(id) : { name:'', needsBodyPart:false, defaultPrice:0, currency:'NIS' };
+  var curs = activeCurrencies();
+  var curOptions = '';
+  for(var i=0;i<curs.length;i++){
+    var c = curs[i];
+    curOptions += '<option value="'+c.code+'"'+(s.currency===c.code?' selected':'')+'>'+c.label+'</option>';
+  }
+  openSheet(
+    '<h2>'+(id?'Edit':'Add')+' Service</h2>' +
+    '<label>Service name (English)</label>' +
+    '<input id="svcName" value="'+esc(s.name)+'" placeholder="e.g. Manicure, APL">' +
+    '<label style="display:flex;align-items:center;gap:8px;margin-top:12px">' +
+      '<input type="checkbox" id="svcBody" '+(s.needsBodyPart?'checked':'')+' style="width:auto;min-height:auto">' +
+      '<span>Requires body part (e.g. APL)</span>' +
+    '</label>' +
+    '<label>Default price</label>' +
+    '<div class="row">' +
+      '<input id="svcPrice" type="number" min="0" step="0.01" value="'+(s.defaultPrice||0)+'" style="flex:2">' +
+      '<select id="svcCur" style="flex:1">'+curOptions+'</select>' +
+    '</div>' +
+    '<div class="row" style="margin-top:12px">' +
+      '<button class="grow" id="svcCancel">Cancel</button>' +
+      '<button class="primary grow" id="svcSave">Save</button>' +
+    '</div>'
+  );
+  document.getElementById('svcCancel').onclick = function(){ document.getElementById('sheetClose').click(); };
+  document.getElementById('svcSave').onclick = function(){
+    var name = document.getElementById('svcName').value.trim();
+    var needs = document.getElementById('svcBody').checked;
+    var price = Number(document.getElementById('svcPrice').value)||0;
+    var cur = document.getElementById('svcCur').value;
+    if(!name){ toast('Name required'); return; }
+    if(id){
+      var sv = svcById(id);
+      sv.name=name; sv.needsBodyPart=needs; sv.defaultPrice=price; sv.currency=cur;
+    } else {
+      DB.services.push({ id: uid(), name:name, needsBodyPart:needs, defaultPrice:price, currency:cur });
+    }
+    saveDB();
+    document.getElementById('sheetClose').click();
+    renderServices();
+    toast('Saved');
+  };
+}
+function delService(id){
+  var s = svcById(id);
+  confirmDialog('Delete service "'+s.name+'"?', function(){
+    var out = [];
+    for(var i=0;i<DB.services.length;i++) if(DB.services[i].id!==id) out.push(DB.services[i]);
+    DB.services = out;
+    saveDB(); renderServices(); toast('Deleted');
+  });
+}
+
+/* ============================================================
+   EXPENSES
+   ============================================================ */
+function monthRangeForFilter(filter){
+  var now = new Date();
+  var y = now.getFullYear(), m = now.getMonth();
+  var from, to;
+  if(filter === 'thisMonth'){
+    from = new Date(y, m, 1);
+    to = new Date(y, m+1, 0);
+  } else if(filter === 'lastMonth'){
+    from = new Date(y, m-1, 1);
+    to = new Date(y, m, 0);
+  } else if(filter === 'thisYear'){
+    from = new Date(y, 0, 1);
+    to = new Date(y, 11, 31);
+  } else {
+    return { from: '0000-01-01', to: '9999-12-31' };
+  }
+  return { from: ymd(from), to: ymd(to) };
+}
+
+function renderExpenses(){
+  if(!DB.expenses) DB.expenses = [];
+  if(!DB.expenseCategories) DB.expenseCategories = [];
+
+  var filterEl = document.getElementById('expFilter');
+  var filter = filterEl ? filterEl.value : 'thisMonth';
+  var range = monthRangeForFilter(filter);
+
+  var list = [];
+  for(var i=0;i<DB.expenses.length;i++){
+    var ex = DB.expenses[i];
+    if(ex.date >= range.from && ex.date <= range.to) list.push(ex);
+  }
+  list.sort(function(a,b){ return b.date.localeCompare(a.date); });
+
+  var totals = {};
+  for(var j=0;j<list.length;j++){
+    var e2 = list[j];
+    var cur = e2.currency || 'NIS';
+    if(!totals[cur]) totals[cur] = {all:0,paid:0,unpaid:0};
+    var amt = Number(e2.amount)||0;
+    totals[cur].all += amt;
+    if(e2.paid) totals[cur].paid += amt;
+    else totals[cur].unpaid += amt;
+  }
+
+  var totHtml = '';
+  var curs = activeCurrencies();
+  for(var ci=0;ci<curs.length;ci++){
+    var c = curs[ci];
+    var t = totals[c.code] || {all:0,paid:0,unpaid:0};
+    if(t.all === 0) continue;
+    totHtml += '<div class="t money">' +
+      '<span class="lbl">'+c.code+':</span> '+fmtMoney(t.all, c.code) +
+      (t.unpaid > 0 ? ' <span class="lbl">(paid '+fmtMoney(t.paid,c.code)+' · unpaid '+fmtMoney(t.unpaid,c.code)+')</span>' : '') +
+    '</div>';
+  }
+  if(!totHtml) totHtml = '<div class="muted small">No expenses in this period</div>';
+  document.getElementById('expTotals').innerHTML =
+    '<span class="lbl" style="font-weight:400;font-size:12px">EXPENSES</span> ' + totHtml;
+
+  var holder = document.getElementById('expList');
+  if(!list.length){
+    holder.innerHTML = '<div class="empty">No expenses yet. Tap + Add Expense.</div>';
+    return;
+  }
+  var html = '';
+  for(var k=0;k<list.length;k++){
+    var ex = list[k];
+    var statusTxt = ex.paid
+      ? '<span class="paidTag" style="font-size:10px">Paid</span>'
+      : '<span class="unpaidTag" style="font-size:10px">Unpaid</span>';
+    html += '<div class="listRow">' +
+      '<div class="grow">' +
+        '<div style="font-weight:600">'+esc(ex.category) + ' ' + statusTxt + '</div>' +
+        '<div class="meta">'+esc(ex.date) + (ex.description ? ' · '+esc(ex.description) : '') + '</div>' +
+        (ex.paid && ex.paidDate ? '<div class="small muted">Paid: '+esc(ex.paidDate)+'</div>' : '') +
+        (ex.notes ? '<div class="small muted">'+esc(ex.notes)+'</div>' : '') +
+      '</div>' +
+      '<div class="money" style="font-weight:600;margin-right:6px">'+esc(fmtMoney(ex.amount, ex.currency))+'</div>' +
+      '<button class="small" data-edit="'+ex.id+'">Edit</button>' +
+      '<button class="small danger" data-del="'+ex.id+'">Del</button>' +
+    '</div>';
+  }
+  holder.innerHTML = html;
+  var bs = holder.querySelectorAll('[data-edit]');
+  for(var m=0;m<bs.length;m++) bs[m].onclick = function(){ editExpense(this.dataset.edit); };
+  bs = holder.querySelectorAll('[data-del]');
+  for(var n=0;n<bs.length;n++) bs[n].onclick = function(){ delExpense(this.dataset.del); };
+}
+document.getElementById('expFilter').onchange = renderExpenses;
+
+function editExpense(id){
+  var ex = null;
+  if(id){
+    for(var i=0;i<DB.expenses.length;i++) if(DB.expenses[i].id===id){ ex = DB.expenses[i]; break; }
+  }
+  if(!ex){
+    ex = { id: uid(), date: todayYmd(), category: (DB.expenseCategories[0]||'Other'),
+           description:'', amount:0, currency:'NIS', paid:true, paidDate: todayYmd(), notes:'' };
+  }
+  var catOpts = '';
+  for(var j=0;j<DB.expenseCategories.length;j++){
+    var c = DB.expenseCategories[j];
+    catOpts += '<option value="'+esc(c)+'"'+(ex.category===c?' selected':'')+'>'+esc(c)+'</option>';
+  }
+  var curs = activeCurrencies();
+  var curOpts = '';
+  for(var k=0;k<curs.length;k++){
+    var cc = curs[k];
+    curOpts += '<option value="'+cc.code+'"'+((ex.currency||'NIS')===cc.code?' selected':'')+'>'+cc.label+'</option>';
+  }
+  openSheet(
+    '<h2>'+(id?'Edit':'Add')+' Expense</h2>' +
+    '<label>Date</label>' +
+    '<input type="date" id="exDate" value="'+esc(ex.date)+'">' +
+    '<label>Category</label>' +
+    '<select id="exCat">'+catOpts+'</select>' +
+    '<label>Description (optional)</label>' +
+    '<input id="exDesc" value="'+esc(ex.description||'')+'" placeholder="e.g. August bill">' +
+    '<label>Amount</label>' +
+    '<div class="row">' +
+      '<input id="exAmount" type="number" min="0" step="0.01" value="'+(ex.amount||0)+'" inputmode="decimal" style="flex:2">' +
+      '<select id="exCur" style="flex:1">'+curOpts+'</select>' +
+    '</div>' +
+    '<label style="display:flex;align-items:center;gap:8px;margin-top:12px">' +
+      '<input type="checkbox" id="exPaid" '+(ex.paid?'checked':'')+' style="width:auto;min-height:auto">' +
+      '<span>Paid</span>' +
+    '</label>' +
+    '<label>Paid date</label>' +
+    '<input type="date" id="exPaidDate" value="'+esc(ex.paidDate||ex.date)+'">' +
+    '<label>Notes (optional)</label>' +
+    '<input id="exNotes" value="'+esc(ex.notes||'')+'">' +
+    '<div class="row" style="margin-top:12px">' +
+      '<button class="grow" id="exCancel">Cancel</button>' +
+      '<button class="primary grow" id="exSave">Save</button>' +
+    '</div>'
+  );
+  document.getElementById('exCancel').onclick = function(){ document.getElementById('sheetClose').click(); };
+  document.getElementById('exSave').onclick = function(){
+    var date = document.getElementById('exDate').value;
+    var cat = document.getElementById('exCat').value;
+    var desc = document.getElementById('exDesc').value.trim();
+    var amount = Number(document.getElementById('exAmount').value)||0;
+    var currency = document.getElementById('exCur').value;
+    var paid = document.getElementById('exPaid').checked;
+    var paidDate = document.getElementById('exPaidDate').value;
+    var notes = document.getElementById('exNotes').value.trim();
+    if(!date){ toast('Date required'); return; }
+    if(amount <= 0){ toast('Amount must be > 0'); return; }
+    ex.date = date;
+    ex.category = cat;
+    ex.description = desc;
+    ex.amount = amount;
+    ex.currency = currency;
+    ex.paid = paid;
+    ex.paidDate = paid ? (paidDate || date) : '';
+    ex.notes = notes;
+    var exists = false;
+    for(var i=0;i<DB.expenses.length;i++) if(DB.expenses[i].id === ex.id){ exists = true; break; }
+    if(!exists) DB.expenses.push(ex);
+    saveDB();
+    document.getElementById('sheetClose').click();
+    renderExpenses();
+    toast('Saved');
+  };
+}
+
+function delExpense(id){
+  confirmDialog('Delete this expense?', function(){
+    var out = [];
+    for(var i=0;i<DB.expenses.length;i++) if(DB.expenses[i].id!==id) out.push(DB.expenses[i]);
+    DB.expenses = out;
+    saveDB(); renderExpenses(); toast('Deleted');
+  });
+}
+document.getElementById('btnAddExpense').onclick = function(){ editExpense(null); };
+document.getElementById('btnManageCats').onclick = function(){ renderCatManager(); };
+
+function renderCatManager(){
+  var cats = DB.expenseCategories || [];
+  var html = '<h2>Expense Categories</h2>';
+  html += '<label>Add new category</label>';
+  html += '<div class="row"><input id="newCatName" placeholder="e.g. Insurance" style="flex:2"><button class="primary" id="addCatBtn">Add</button></div>';
+  html += '<div class="hr"></div>';
+  if(!cats.length) html += '<div class="small muted">No categories.</div>';
+  else {
+    for(var i=0;i<cats.length;i++){
+      html += '<div class="listRow">' +
+        '<div class="grow">'+esc(cats[i])+'</div>' +
+        '<button class="small danger" data-rm="'+i+'">Remove</button>' +
+      '</div>';
+    }
+  }
+  html += '<div class="row" style="margin-top:12px"><button class="grow primary" id="catDone">Done</button></div>';
+  openSheet(html);
+  document.getElementById('addCatBtn').onclick = function(){
+    var v = document.getElementById('newCatName').value.trim();
+    if(!v){ toast('Enter a name'); return; }
+    if(DB.expenseCategories.indexOf(v) >= 0){ toast('Already exists'); return; }
+    DB.expenseCategories.push(v);
+    saveDB();
+    document.getElementById('sheetClose').click();
+    renderCatManager();
+    toast('Added');
+  };
+  var rmBs = document.querySelectorAll('[data-rm]');
+  for(var j=0;j<rmBs.length;j++){
+    (function(b){
+      b.onclick = function(){
+        var idx = Number(b.dataset.rm);
+        var used = false;
+        for(var k=0;k<DB.expenses.length;k++){
+          if(DB.expenses[k].category === DB.expenseCategories[idx]){ used = true; break; }
+        }
+        if(used){ toast('Cannot remove — category is in use'); return; }
+        DB.expenseCategories.splice(idx,1);
+        saveDB();
+        document.getElementById('sheetClose').click();
+        renderCatManager();
+        toast('Removed');
+      };
+    })(rmBs[j]);
+  }
+  document.getElementById('catDone').onclick = function(){
+    document.getElementById('sheetClose').click();
+    renderExpenses();
+  };
+}
+
+/* ============================================================
+   MONTHLY REPORT ENGINE
+   ============================================================ */
+var monYear = null, monMonth = null;
+
+function monthRange(y, m){
+  var from = new Date(y, m, 1);
+  var to = new Date(y, m+1, 0);
+  return { from: ymd(from), to: ymd(to) };
+}
+function monthLabel(y, m){
+  var mons = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  return mons[m] + ' ' + y;
+}
+
+function computeMonthReport(y, m){
+  var range = monthRange(y, m);
+  var result = {
+    range: range,
+    revenue: {},
+    byEmployee: {},
+    expenses: {},
+    apptCount: 0,
+    unpaidByEmployee: {}
+  };
+  var curs = activeCurrencies();
+  for(var ci=0;ci<curs.length;ci++){
+    result.revenue[curs[ci].code] = {total:0,paid:0};
+    result.expenses[curs[ci].code] = {total:0,paid:0,unpaid:0};
+  }
+
+  var appts = [];
+  for(var i=0;i<DB.appointments.length;i++){
+    var a = DB.appointments[i];
+    if(a.date >= range.from && a.date <= range.to) appts.push(a);
+  }
+  result.apptCount = appts.length;
+
+  for(var ai=0; ai<appts.length; ai++){
+    var ap = appts[ai];
+    var pt = apptPaymentTotals(ap);
+    for(var cur in pt.totals){
+      if(!Object.prototype.hasOwnProperty.call(pt.totals,cur)) continue;
+      if(!result.revenue[cur]) result.revenue[cur] = {total:0,paid:0};
+      result.revenue[cur].total += pt.totals[cur]||0;
+      result.revenue[cur].paid  += pt.paid[cur]||0;
+    }
+
+    var svcs = ap.services || [];
+    var totalsPerCur = {};
+    for(var si=0; si<svcs.length; si++){
+      var s = svcs[si];
+      var c = s.currency || 'NIS';
+      if(totalsPerCur[c] == null) totalsPerCur[c] = 0;
+      totalsPerCur[c] += Number(s.price)||0;
+    }
+    var paidPerCur = {};
+    if(ap.paid && typeof ap.paid === 'object'){
+      for(var pk in ap.paid){
+        if(!Object.prototype.hasOwnProperty.call(ap.paid,pk)) continue;
+        paidPerCur[pk] = Number(ap.paid[pk])||0;
+      }
+    }
+    for(var sj=0; sj<svcs.length; sj++){
+      var s2 = svcs[sj];
+      var cur2 = s2.currency || 'NIS';
+      var svcPrice = Number(s2.price)||0;
+      var curTotal = totalsPerCur[cur2]||0;
+      var curPaid = paidPerCur[cur2]||0;
+      var share = (curTotal > 0) ? (svcPrice / curTotal) : 0;
+      var paidShare = curPaid * share;
+      var empId = s2.empId;
+      if(!result.byEmployee[empId]){
+        result.byEmployee[empId] = {
+          nameAr: (empById(empId)||{}).nameAr || '?',
+          revenue: {}, paid: {}
+        };
+      }
+      var be = result.byEmployee[empId];
+      if(!be.revenue[cur2]) be.revenue[cur2] = 0;
+      if(!be.paid[cur2]) be.paid[cur2] = 0;
+      be.revenue[cur2] += svcPrice;
+      be.paid[cur2] += paidShare;
+    }
+  }
+
+  for(var empId2 in result.byEmployee){
+    if(!Object.prototype.hasOwnProperty.call(result.byEmployee,empId2)) continue;
+    var be2 = result.byEmployee[empId2];
+    result.unpaidByEmployee[empId2] = {};
+    var seenCurs = {};
+    for(var rc in be2.revenue){
+      if(!Object.prototype.hasOwnProperty.call(be2.revenue,rc)) continue;
+      seenCurs[rc] = true;
+    }
+    for(var pc in be2.paid){
+      if(!Object.prototype.hasOwnProperty.call(be2.paid,pc)) continue;
+      seenCurs[pc] = true;
+    }
+    for(var cc in seenCurs){
+      if(!Object.prototype.hasOwnProperty.call(seenCurs,cc)) continue;
+      var t2 = be2.revenue[cc]||0;
+      var p2 = be2.paid[cc]||0;
+      result.unpaidByEmployee[empId2][cc] = t2 - p2;
+    }
+  }
+
+  for(var ei=0; ei<DB.expenses.length; ei++){
+    var ex = DB.expenses[ei];
+    if(ex.date < range.from || ex.date > range.to) continue;
+    var exc = ex.currency || 'NIS';
+    if(!result.expenses[exc]) result.expenses[exc] = {total:0,paid:0,unpaid:0};
+    var amt = Number(ex.amount)||0;
+    result.expenses[exc].total += amt;
+    if(ex.paid) result.expenses[exc].paid += amt;
+    else result.expenses[exc].unpaid += amt;
+  }
+
+  return result;
+}
+
+function renderMonthly(){
+  if(monYear == null){
+    var now = new Date();
+    monYear = now.getFullYear();
+    monMonth = now.getMonth();
+  }
+  document.getElementById('monLabel').textContent = monthLabel(monYear, monMonth);
+
+  var rep = computeMonthReport(monYear, monMonth);
+  var curs = activeCurrencies();
+  var html = '';
+
+  html += '<div class="card">';
+  html += '<h2 style="margin-top:0">Revenue</h2>';
+  html += '<div class="small muted">'+rep.apptCount+' appointment(s) in this month</div>';
+  var revHtml = '';
+  for(var i=0;i<curs.length;i++){
+    var c = curs[i];
+    var r = rep.revenue[c.code] || {total:0,paid:0};
+    if(r.total === 0 && r.paid === 0) continue;
+    var outstanding = r.total - r.paid;
+    revHtml += '<div style="margin:4px 0"><b>'+c.code+':</b> ' + fmtMoney(r.total, c.code) +
+      ' total · ' + fmtMoney(r.paid, c.code) + ' paid' +
+      (outstanding > 0 ? ' · <span style="color:#c62828">' + fmtMoney(outstanding, c.code) + ' outstanding</span>' : '') +
+      '</div>';
+  }
+  html += revHtml || '<div class="muted small">No revenue</div>';
+  html += '</div>';
+
+  html += '<div class="card">';
+  html += '<h2 style="margin-top:0">By Employee</h2>';
+  var empIds = Object.keys(rep.byEmployee);
+  if(!empIds.length){
+    html += '<div class="muted small">No employee activity</div>';
+  } else {
+    for(var ei=0; ei<empIds.length; ei++){
+      var empId = empIds[ei];
+      var be = rep.byEmployee[empId];
+      var emp = empById(empId);
+      var commPct = emp ? (Number(emp.commissionPct)||0) : 0;
+      html += '<div style="border-top:1px solid var(--line);padding-top:8px;margin-top:8px">';
+      html += '<div class="nmAr" style="font-size:16px">'+esc(be.nameAr)+'</div>';
+      html += '<div class="small muted">Commission: '+commPct+'%</div>';
+      var anyCur = false;
+      for(var ci=0;ci<curs.length;ci++){
+        var cc = curs[ci];
+        var rev = be.revenue[cc.code]||0;
+        var pd = be.paid[cc.code]||0;
+        if(rev === 0 && pd === 0) continue;
+        anyCur = true;
+        var unpaidE = rev - pd;
+        var commAmt = pd * (commPct/100);
+        html += '<div class="small" style="margin:2px 0">' +
+          '<b>'+cc.code+'</b> — revenue '+fmtMoney(rev, cc.code) +
+          ' · paid '+fmtMoney(pd, cc.code) +
+          (unpaidE > 0 ? ' · <span style="color:#c62828">unpaid '+fmtMoney(unpaidE, cc.code)+'</span>' : '') +
+          ' · <b>commission '+fmtMoney(commAmt, cc.code)+'</b>' +
+          '</div>';
+      }
+      if(!anyCur) html += '<div class="small muted">No activity</div>';
+      html += '</div>';
+    }
+  }
+  html += '</div>';
+
+  html += '<div class="card">';
+  html += '<h2 style="margin-top:0">Payroll</h2>';
+  var payrollByCur = {};
+  for(var pi=0; pi<empIds.length; pi++){
+    var peId = empIds[pi];
+    var pEmp = empById(peId);
+    if(!pEmp) continue;
+    var pBe = rep.byEmployee[peId];
+    var pPct = Number(pEmp.commissionPct)||0;
+    var pBase = Number(pEmp.baseSalary)||0;
+    var pBaseCur = pEmp.salaryCurrency || 'NIS';
+    html += '<div style="border-top:1px solid var(--line);padding-top:8px;margin-top:8px">';
+    html += '<div class="nmAr" style="font-size:16px">'+esc(pEmp.nameAr)+'</div>';
+    html += '<div class="small">Base salary: '+fmtMoney(pBase, pBaseCur)+'</div>';
+    if(!payrollByCur[pBaseCur]) payrollByCur[pBaseCur] = 0;
+    payrollByCur[pBaseCur] += pBase;
+    for(var pci=0;pci<curs.length;pci++){
+      var pcc = curs[pci];
+      var pPaid = pBe.paid[pcc.code]||0;
+      if(pPaid === 0) continue;
+      var pCommAmt = pPaid * (pPct/100);
+      if(pCommAmt === 0) continue;
+      html += '<div class="small">Commission ('+pPct+'% of paid): '+fmtMoney(pCommAmt, pcc.code)+'</div>';
+      if(!payrollByCur[pcc.code]) payrollByCur[pcc.code] = 0;
+      payrollByCur[pcc.code] += pCommAmt;
+    }
+    html += '</div>';
+  }
+  html += '<div class="hr"></div>';
+  html += '<div><b>Total payroll</b></div>';
+  for(var pkc=0;pkc<curs.length;pkc++){
+    var pkc2 = curs[pkc];
+    if(payrollByCur[pkc2.code]){
+      html += '<div class="small money">'+pkc2.code+': '+fmtMoney(payrollByCur[pkc2.code], pkc2.code)+'</div>';
+    }
+  }
+  html += '</div>';
+
+  html += '<div class="card">';
+  html += '<h2 style="margin-top:0">Expenses</h2>';
+  var expAny = false;
+  for(var exi=0;exi<curs.length;exi++){
+    var exc = curs[exi];
+    var eTot = rep.expenses[exc.code] || {total:0,paid:0,unpaid:0};
+    if(eTot.total === 0) continue;
+    expAny = true;
+    html += '<div style="margin:4px 0"><b>'+exc.code+':</b> ' +
+      fmtMoney(eTot.total, exc.code) +
+      ' (paid '+fmtMoney(eTot.paid, exc.code) +
+      (eTot.unpaid > 0 ? ' · <span style="color:#c62828">unpaid '+fmtMoney(eTot.unpaid, exc.code)+'</span>' : '') +
+      ')</div>';
+  }
+  if(!expAny) html += '<div class="muted small">No expenses</div>';
+  html += '</div>';
+
+  html += '<div class="card">';
+  html += '<h2 style="margin-top:0">Net (per currency)</h2>';
+  html += '<div class="small muted">Revenue − Payroll − Expenses. Currencies are not converted.</div>';
+  var netAny = false;
+  for(var ni=0;ni<curs.length;ni++){
+    var nc = curs[ni];
+    var rev = (rep.revenue[nc.code]||{}).total || 0;
+    var exp = (rep.expenses[nc.code]||{}).total || 0;
+    var pay = payrollByCur[nc.code]||0;
+    if(rev === 0 && exp === 0 && pay === 0) continue;
+    netAny = true;
+    var net = rev - exp - pay;
+    html += '<div style="margin:4px 0"><b>'+nc.code+':</b> ' +
+      fmtMoney(rev, nc.code) + ' − ' + fmtMoney(pay, nc.code) + ' − ' + fmtMoney(exp, nc.code) +
+      ' = <b style="color:'+(net>=0?'#1b5e20':'#c62828')+'">'+fmtMoney(net, nc.code)+'</b></div>';
+  }
+  if(!netAny) html += '<div class="muted small">No activity</div>';
+  html += '</div>';
+
+  document.getElementById('monReport').innerHTML = html;
+}
+
+document.getElementById('monPrev').onclick = function(){
+  monMonth--; if(monMonth < 0){ monMonth = 11; monYear--; }
+  renderMonthly();
+};
+document.getElementById('monNext').onclick = function(){
+  monMonth++; if(monMonth > 11){ monMonth = 0; monYear++; }
+  renderMonthly();
+};
+
+/* Re-run setup */
+document.getElementById('btnReRunSetup').onclick = function(){
+  confirmDialog('Re-run the setup wizard? Your existing data will not be erased.', function(){
+    showWizard();
+  });
+};
+
+document.getElementById('dayDate').value = selectedDate;
+document.getElementById('bookedOnDate').value = todayYmd();
+document.getElementById('printDate').value = addDays(todayYmd(), 1);
+var expDateEl = document.getElementById('exportDayDate');
+if(expDateEl) expDateEl.value = todayYmd();
+document.getElementById('btnToday').onclick = function(){
+  selectedDate = todayYmd();
+  document.getElementById('dayDate').value = selectedDate;
+  showTab('day');
+};
+
+/* Expose to Part 3 */
+window.__salon = {
+  get DB(){ return DB; },
+  set DB(v){ DB = v; },
+  saveDB: saveDB,
+  uid: uid, pad: pad, ymd: ymd, parseYmd: parseYmd, addDays: addDays, dowOf: dowOf,
+  fmtHM: fmtHM, fmtDateLong: fmtDateLong, fmtDateTimeShort: fmtDateTimeShort,
+  todayYmd: todayYmd, esc: esc, toast: toast,
+  openSheet: openSheet, confirmDialog: confirmDialog, showTab: showTab,
+  isSalonClosed: isSalonClosed, setSalonClosed: setSalonClosed,
+  empAvailableOn: empAvailableOn, empOnVacation: empOnVacation, empEmergencyOff: empEmergencyOff,
+  toggleEmpEmergency: toggleEmpEmergency,
+  apptsOnDate: apptsOnDate, empBusyRanges: empBusyRanges, empFreeForRange: empFreeForRange,
+  empById: empById, svcById: svcById, clientById: clientById, clientByPhone: clientByPhone,
+  STORE_KEY: STORE_KEY, ALL_CURRENCIES: ALL_CURRENCIES,
+  activeCurrencies: activeCurrencies,
+  currencyInfo: currencyInfo, fmtMoney: fmtMoney,
+  apptPaymentTotals: apptPaymentTotals, totalsBarHtml: totalsBarHtml,
+  renderExpenses: renderExpenses,
+  computeMonthReport: computeMonthReport,
+  monthLabel: monthLabel, monthRange: monthRange,
+  get monYear(){ return monYear; },
+  get monMonth(){ return monMonth; },
+  showWizard: showWizard, applySettingsToUI: applySettingsToUI
+};
+
+/* Apply settings to header */
+applySettingsToUI();
+
+/* If setup hasn't run, show wizard; otherwise show the app */
+if(!DB.settings.setupDone){
+  showWizard();
+} else {
+  showTab('day');
+}
+</script>
+
+<<script>
+(function(){
+'use strict';
+
+var S = window.__salon;
+function DB(){ return S.DB; }
+function saveDB(){ S.saveDB(); }
+
+var SLOT = 15;
+
+function dayDateYmd(){ return document.getElementById('dayDate').value || S.todayYmd(); }
+
+/* ============================================================
+   DAY VIEW
+   ============================================================ */
+function renderDay(){
+  var dateYmd = dayDateYmd();
+  var closed = S.isSalonClosed(dateYmd);
+  var appts = S.apptsOnDate(dateYmd);
+
+  var dows = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  var mons = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var dd = S.parseYmd(dateYmd);
+  document.getElementById('dayBanner').textContent =
+    dows[dd.getDay()] + ' ' + mons[dd.getMonth()] + ' ' + dd.getDate() + ', ' + dd.getFullYear();
+  document.getElementById('dayBannerSub').innerHTML =
+    (closed ? '<b style="color:#c62828">SALON CLOSED</b>' : 'Open') + ' · ' +
+    appts.length + ' appointment' + (appts.length===1?'':'s');
+
+  var emps = DB().employees;
+  if(!emps.length){
+    document.getElementById('dayGridHolder').innerHTML =
+      '<div class="empty">No employees yet. Add staff in the Staff tab.</div>';
+    document.getElementById('dayTotals').innerHTML = '';
+    return;
+  }
+
+  var OPEN_H = DB().settings.openHour;
+  var CLOSE_H = DB().settings.closeHour;
+
+  var startMin = OPEN_H * 60;
+  var endMin   = CLOSE_H * 60;
+  for(var ai=0; ai<appts.length; ai++){
+    var a = appts[ai];
+    var svcs = a.services || [];
+    for(var si=0; si<svcs.length; si++){
+      var s = svcs[si];
+      var sEnd = s.startMin + s.durationMin;
+      if(s.startMin < startMin) startMin = s.startMin;
+      if(sEnd > endMin) endMin = sEnd;
+    }
+  }
+  startMin = Math.floor(startMin / SLOT) * SLOT;
+  endMin   = Math.ceil(endMin / SLOT) * SLOT;
+
+  var rows = [];
+  for(var m=startMin; m<endMin; m+=SLOT) rows.push(m);
+
+  var html = '<table class="dayGrid"><thead><tr><th class="timeCol">Time</th>';
+  for(var ei=0; ei<emps.length; ei++){
+    var e = emps[ei];
+    var off = !S.empAvailableOn(e.id, dateYmd);
+    var offReason = S.empOnVacation(e.id, dateYmd) ? 'On vacation'
+                  : S.empEmergencyOff(e.id, dateYmd) ? 'Absent today' : '';
+    html += '<th><div class="empHeader '+(off?'off':'')+'">' +
+              '<div class="nmAr">'+S.esc(e.nameAr)+'</div>' +
+              '<div class="specialty">'+S.esc(e.specialty||'')+'</div>' +
+              '<button class="toggle small '+(off?'primary':'')+'" data-emp-toggle="'+e.id+'" title="'+S.esc(offReason||'Tap to mark absent')+'">' +
+                (off ? 'OFF' : 'ON') +
+              '</button>' +
+            '</div></th>';
+  }
+  html += '</tr></thead><tbody>';
+
+  for(var ri=0; ri<rows.length; ri++){
+    var mm = rows[ri];
+    html += '<tr>';
+    var isHour = (mm % 60)===0;
+    html += '<td class="timeCol">' + (isHour ? S.fmtHM(mm) : '') + '</td>';
+    for(var e2=0; e2<emps.length; e2++){
+      var emp = emps[e2];
+      var empOff = !S.empAvailableOn(emp.id, dateYmd);
+      var cellClass = 'slot' + (closed ? ' grey' : '') + (empOff ? ' empOff' : '');
+      html += '<td class="'+cellClass+'" data-emp="'+emp.id+'" data-min="'+mm+'" data-date="'+dateYmd+'"></td>';
+    }
+    html += '</tr>';
+  }
+  html += '</tbody></table>';
+  document.getElementById('dayGridHolder').innerHTML = html;
+
+  var table = document.querySelector('#dayGridHolder table');
+
+  for(var ai2=0; ai2<appts.length; ai2++){
+    var appt = appts[ai2];
+    var pay = S.apptPaymentTotals(appt);
+    var client = S.clientById(appt.clientId);
+    var clientName = client ? client.nameAr : (appt.clientNameSnapshot||'');
+    var svcsArr = appt.services || [];
+    for(var si2=0; si2<svcsArr.length; si2++){
+      var s2 = svcsArr[si2];
+      var startRow = (s2.startMin - startMin) / SLOT;
+      var spanRows = Math.max(1, Math.ceil(s2.durationMin / SLOT));
+      var cell = table.querySelector('td[data-emp="'+s2.empId+'"][data-min="'+(startMin + startRow*SLOT)+'"]');
+      if(!cell) continue;
+
+      var div = document.createElement('div');
+      div.className = 'appt pay-' + pay.status;
+      div.dataset.appt = appt.id;
+      var timeLabel = S.fmtHM(s2.startMin) + '–' + S.fmtHM(s2.startMin + s2.durationMin);
+      var extra = s2.bodyPart ? ' · '+s2.bodyPart : '';
+      var priceTxt = (s2.price!=null && Number(s2.price)>0) ? S.fmtMoney(s2.price, s2.currency||'NIS') : '';
+      var checkMark = (pay.status === 'paid') ? '<span class="payCheck">✓</span>' : '';
+      div.innerHTML =
+        checkMark +
+        '<div class="nm">'+S.esc(clientName)+'</div>' +
+        '<div class="sv">'+S.esc(s2.name)+extra+'</div>' +
+        '<div class="tm">'+S.esc(timeLabel)+'</div>' +
+        (priceTxt ? '<div class="pr">'+S.esc(priceTxt)+'</div>' : '');
+      div.style.height = 'calc('+spanRows+' * var(--slot) - 2px)';
+      div.style.zIndex = 5;
+      cell.appendChild(div);
+    }
+  }
+
+  var tds = table.querySelectorAll('td.slot');
+  for(var ti=0; ti<tds.length; ti++){
+    (function(td){
+      td.addEventListener('click', function(e){
+        if(e.target.closest('.appt')) return;
+        if(closed){ S.toast('Salon is closed on this day'); return; }
+        var empId = td.dataset.emp;
+        var m = Number(td.dataset.min);
+        if(!S.empAvailableOn(empId, dateYmd)){ S.toast('Employee is off this day'); return; }
+        openBooking({ date: dateYmd, startMin: m });
+      });
+    })(tds[ti]);
+  }
+
+  var apptEls = table.querySelectorAll('.appt');
+  for(var ae=0; ae<apptEls.length; ae++){
+    (function(el){
+      el.addEventListener('click', function(e){
+        e.stopPropagation();
+        openApptActions(el.dataset.appt);
+      });
+    })(apptEls[ae]);
+  }
+
+  var toggles = table.querySelectorAll('[data-emp-toggle]');
+  for(var tg=0; tg<toggles.length; tg++){
+    (function(b){
+      b.addEventListener('click', function(e){
+        e.stopPropagation();
+        S.toggleEmpEmergency(b.dataset.empToggle, dateYmd);
+        renderDay();
+      });
+    })(toggles[tg]);
+  }
+
+  /* Day totals */
+  var totals = {};
+  var paids  = {};
+  var curs = S.activeCurrencies();
+  for(var ci=0;ci<curs.length;ci++){ totals[curs[ci].code]=0; paids[curs[ci].code]=0; }
+  for(var ai3=0; ai3<appts.length; ai3++){
+    var pt = S.apptPaymentTotals(appts[ai3]);
+    for(var k in pt.totals){
+      if(!Object.prototype.hasOwnProperty.call(pt.totals,k)) continue;
+      if(totals[k] == null) totals[k]=0;
+      if(paids[k] == null) paids[k]=0;
+      totals[k] += pt.totals[k]||0;
+      paids[k]  += pt.paid[k]||0;
+    }
+  }
+  document.getElementById('dayTotals').innerHTML =
+    '<span class="lbl" style="font-weight:400;font-size:12px">DAY TOTALS</span> ' +
+    S.totalsBarHtml(totals, paids);
+}
+
+document.getElementById('prevDay').onclick = function(){
+  document.getElementById('dayDate').value = S.addDays(dayDateYmd(), -1); renderDay();
+};
+document.getElementById('nextDay').onclick = function(){
+  document.getElementById('dayDate').value = S.addDays(dayDateYmd(), +1); renderDay();
+};
+document.getElementById('dayDate').onchange = renderDay;
+document.getElementById('btnQuickAdd').onclick = function(){ openBooking({ date: dayDateYmd() }); };
+document.getElementById('btnPrintNext').onclick = function(){ printDaySheet(dayDateYmd()); };
+
+/* ============================================================
+   BOOKING
+   ============================================================ */
+function openBooking(initial){
+  initial = initial || {};
+  var draft = {
+    date: initial.date || dayDateYmd(),
+    clientId: initial.prefillClientId || null,
+    services: (initial.prefillServices || []).slice(),
+    startMin: initial.startMin != null ? initial.startMin : null,
+    notes: initial.prefillNotes || '',
+    totalMin: null
+  };
+
+  render();
+
+  function totalMin(){
+    var t = 0;
+    for(var i=0;i<draft.services.length;i++) t += Number(draft.services[i].durationMin)||0;
+    return t;
+  }
+
+  function render(){
+    var client = draft.clientId ? S.clientById(draft.clientId) : null;
+    var clientLabel = client
+      ? '<span class="ar">'+S.esc(client.nameAr)+'</span> <span class="muted small">· '+S.esc(client.phone||'')+'</span>'
+      : '<span class="muted">No client selected</span>';
+
+    var html = '<h2>New Appointment</h2>';
+    html += '<div class="steps">' +
+      '<span class="st '+(draft.date?'done':'')+'">1. Date</span>' +
+      '<span class="st '+(draft.clientId?'done':'')+'">2. Client</span>' +
+      '<span class="st '+(draft.services.length?'done':'')+'">3. Services</span>' +
+      '<span class="st '+(draft.startMin!=null?'done':'')+'">4. Time</span>' +
+    '</div>';
+
+    html += '<label>Date</label><input type="date" id="bDate" value="'+S.esc(draft.date)+'">';
+    html += '<label>Client</label>' +
+      '<div class="row">' +
+        '<div class="grow" style="padding:8px;border:1px dashed var(--line);border-radius:10px">'+clientLabel+'</div>' +
+        '<button id="bPickClient" class="small">Pick</button>' +
+        '<button id="bNewClient" class="small primary">+ New</button>' +
+      '</div>';
+
+    html += '<label>Services</label>';
+    html += '<div class="row tight" id="bSvcBtns"></div>';
+    html += '<div class="pickedList" id="bPickedList"></div>';
+
+    var t = totalMin();
+    html += '<label>Start time &amp; total minutes</label>' +
+      '<div class="row">' +
+        '<input type="time" id="bStart" step="300" value="'+(draft.startMin!=null?S.fmtHM(draft.startMin):'')+'" style="flex:1">' +
+        '<input type="number" id="bTotal" min="5" step="5" placeholder="minutes" value="'+(draft.totalMin||t||'')+'" style="flex:1">' +
+      '</div>';
+    if(draft.startMin!=null){
+      html += '<div class="small muted" style="margin-top:4px">Ends at approx ' +
+        S.esc(S.fmtHM(draft.startMin + (Number(draft.totalMin)||t||0)))+'</div>';
+    }
+
+    if(draft.services.length){
+      var totals = {};
+      for(var i=0;i<draft.services.length;i++){
+        var s = draft.services[i];
+        var c = s.currency || 'NIS';
+        if(totals[c] == null) totals[c] = 0;
+        totals[c] += Number(s.price)||0;
+      }
+      html += '<div class="totalsBar">' + S.totalsBarHtml(totals, {}) + '</div>';
+    }
+
+    html += '<label>Notes (optional)</label><input id="bNotes" value="'+S.esc(draft.notes)+'">';
+    html += '<div class="row" style="margin-top:14px">' +
+      '<button class="grow" id="bCancel">Cancel</button>' +
+      '<button class="primary grow" id="bSave">Save Appointment</button>' +
+    '</div>';
+
+    S.openSheet(html);
+
+    document.getElementById('bDate').onchange = function(e){ draft.date = e.target.value; render(); };
+    document.getElementById('bPickClient').onclick = function(){ pickClientSheet(function(id){ draft.clientId = id; render(); }); };
+    document.getElementById('bNewClient').onclick = function(){ newClientSheet(function(id){ draft.clientId = id; render(); }); };
+
+    var svcRow = document.getElementById('bSvcBtns');
+    var svcs = DB().services;
+    if(!svcs.length){
+      svcRow.innerHTML = '<div class="small muted">No services yet. Add one in the Services tab.</div>';
+    } else {
+      for(var i2=0; i2<svcs.length; i2++){
+        (function(sv){
+          var b = document.createElement('button');
+          b.className = 'chip';
+          b.textContent = sv.name;
+          b.onclick = function(){ addServiceDialog(sv, render); };
+          svcRow.appendChild(b);
+        })(svcs[i2]);
+      }
+    }
+    renderPicked();
+
+    document.getElementById('bStart').onchange = function(e){
+      var v = e.target.value;
+      if(!v){ draft.startMin = null; render(); return; }
+      var parts = v.split(':');
+      draft.startMin = Number(parts[0])*60 + Number(parts[1]);
+      render();
+    };
+    document.getElementById('bTotal').onchange = function(e){
+      draft.totalMin = Number(e.target.value)||0;
+      render();
+    };
+    document.getElementById('bNotes').onchange = function(e){ draft.notes = e.target.value; };
+    document.getElementById('bCancel').onclick = function(){ document.getElementById('sheetClose').click(); };
+    document.getElementById('bSave').onclick = save;
+  }
+
+  function renderPicked(){
+    var holder = document.getElementById('bPickedList');
+    if(!draft.services.length){
+      holder.innerHTML = '<div class="small muted">No services yet — tap a service above.</div>';
+      return;
+    }
+    var html = '';
+    for(var i=0;i<draft.services.length;i++){
+      var s = draft.services[i];
+      var e = S.empById(s.empId);
+      var priceTxt = S.fmtMoney(s.price||0, s.currency||'NIS');
+      html += '<div class="pickedItem">' +
+        '<div class="grow"><b>'+S.esc(s.name)+'</b>' +
+          (s.bodyPart ? ' <span class="muted">('+S.esc(s.bodyPart)+')</span>' : '') +
+          ' — <span class="ar">'+S.esc(e?e.nameAr:'?')+'</span> · '+s.durationMin+' min · ' +
+          '<span class="money">'+S.esc(priceTxt)+'</span>' +
+        '</div>' +
+        '<button data-rm="'+i+'" class="small danger">✕</button>' +
+      '</div>';
+    }
+    holder.innerHTML = html;
+    var bs = holder.querySelectorAll('[data-rm]');
+    for(var j=0;j<bs.length;j++){
+      (function(b){
+        b.onclick = function(){
+          draft.services.splice(Number(b.dataset.rm),1);
+          render();
+        };
+      })(bs[j]);
+    }
+  }
+
+  function addServiceDialog(svc, done){
+    var empOptions = '';
+    var emps = DB().employees;
+    for(var i=0;i<emps.length;i++){
+      var e = emps[i];
+      if(!S.empAvailableOn(e.id, draft.date)) continue;
+      empOptions += '<button class="chip" data-emp="'+e.id+'"><span dir="rtl">'+S.esc(e.nameAr)+'</span> · '+S.esc(e.specialty||'')+'</button>';
+    }
+    var bodyPartInput = svc.needsBodyPart
+      ? '<label>Body part (required)</label><input id="dBody" dir="rtl" placeholder="مثال: وجه، يد، رجل">'
+      : '<label>Detail (optional)</label><input id="dBody">';
+    var curOptions = '';
+    var curs = S.activeCurrencies();
+    for(var c=0;c<curs.length;c++){
+      var cc = curs[c];
+      curOptions += '<option value="'+cc.code+'"'+((svc.currency||'NIS')===cc.code?' selected':'')+'>'+cc.label+'</option>';
+    }
+    S.openSheet(
+      '<h2>Add: '+S.esc(svc.name)+'</h2>' +
+      '<label>Employee</label>' +
+      '<div class="row tight" id="dEmps">'+(empOptions || '<div class="small muted">No employees available that day</div>')+'</div>' +
+      bodyPartInput +
+      '<label>Duration (minutes)</label>' +
+      '<input type="number" id="dDur" min="5" step="5" value="30">' +
+      '<label>Price</label>' +
+      '<div class="row">' +
+        '<input id="dPrice" type="number" min="0" step="0.01" value="'+(svc.defaultPrice||0)+'" style="flex:2">' +
+        '<select id="dCur" style="flex:1">'+curOptions+'</select>' +
+      '</div>' +
+      '<div class="row" style="margin-top:12px">' +
+        '<button class="grow" id="dCancel">Cancel</button>' +
+        '<button class="primary grow" id="dAdd" disabled>Add</button>' +
+      '</div>'
+    );
+    var chosenEmp = null;
+    var empBs = document.querySelectorAll('#dEmps [data-emp]');
+    for(var k=0;k<empBs.length;k++){
+      (function(btn){
+        btn.onclick = function(){
+          for(var x=0;x<empBs.length;x++) empBs[x].classList.remove('on');
+          btn.classList.add('on');
+          chosenEmp = btn.dataset.emp;
+          document.getElementById('dAdd').disabled = false;
+        };
+      })(empBs[k]);
+    }
+    document.getElementById('dCancel').onclick = function(){ document.getElementById('sheetClose').click(); };
+    document.getElementById('dAdd').onclick = function(){
+      if(!chosenEmp){ S.toast('Pick employee'); return; }
+      var dur = Number(document.getElementById('dDur').value)||30;
+      var bodyEl = document.getElementById('dBody');
+      var body = bodyEl ? bodyEl.value.trim() : '';
+      if(svc.needsBodyPart && !body){ S.toast('Body part required'); return; }
+      var price = Number(document.getElementById('dPrice').value)||0;
+      var currency = document.getElementById('dCur').value;
+      draft.services.push({
+        svcId: svc.id, name: svc.name, empId: chosenEmp,
+        durationMin: dur, bodyPart: body || '',
+        price: price, currency: currency
+      });
+      document.getElementById('sheetClose').click();
+      if(done) done();
+    };
+  }
+
+  function save(){
+    if(!draft.clientId){ S.toast('Pick a client'); return; }
+    if(!draft.services.length){ S.toast('Add at least one service'); return; }
+    if(draft.startMin == null){ S.toast('Pick a start time'); return; }
+
+    var cursor = draft.startMin;
+    var placed = [];
+    for(var i=0;i<draft.services.length;i++){
+      var copy = {};
+      for(var k in draft.services[i]) if(Object.prototype.hasOwnProperty.call(draft.services[i],k)) copy[k] = draft.services[i][k];
+      copy.startMin = cursor;
+      placed.push(copy);
+      cursor += copy.durationMin;
+    }
+    for(var j=0;j<placed.length;j++){
+      var s = placed[j];
+      var end = s.startMin + s.durationMin;
+      if(!S.empFreeForRange(s.empId, draft.date, s.startMin, end)){
+        var e = S.empById(s.empId);
+        S.toast('Conflict: '+(e?e.nameAr:'employee')+' busy at '+S.fmtHM(s.startMin));
+        return;
+      }
+    }
+    var c = S.clientById(draft.clientId) || {};
+    var totalMin = 0;
+    for(var t=0;t<placed.length;t++) totalMin += placed[t].durationMin;
+    DB().appointments.push({
+      id: S.uid(),
+      date: draft.date,
+      clientId: draft.clientId,
+      clientNameSnapshot: c.nameAr || '',
+      clientPhoneSnapshot: c.phone || '',
+      services: placed,
+      totalMin: totalMin,
+      startMin: placed[0].startMin,
+      notes: draft.notes || '',
+      bookedOn: S.todayYmd(),
+      bookedAt: Date.now()
+    });
+    saveDB();
+    document.getElementById('sheetClose').click();
+    renderDay();
+    S.toast('Appointment saved');
+  }
+}
+
+/* ============================================================
+   APPOINTMENT ACTIONS + PAYMENT
+   ============================================================ */
+function openApptActions(apptId){
+  var a = null;
+  var all = DB().appointments;
+  for(var i=0;i<all.length;i++) if(all[i].id===apptId){ a = all[i]; break; }
+  if(!a) return;
+  var c = S.clientById(a.clientId);
+  var clientName = c ? c.nameAr : (a.clientNameSnapshot||'');
+  var clientPhone = c ? (c.phone||'') : (a.clientPhoneSnapshot||'');
+
+  var pay = S.apptPaymentTotals(a);
+
+  var svcList = '';
+  for(var j=0;j<a.services.length;j++){
+    var s = a.services[j];
+    var e = S.empById(s.empId);
+    var priceTxt = (Number(s.price)>0) ? S.fmtMoney(s.price, s.currency||'NIS') : '—';
+    svcList += '<div class="pickedItem"><div class="grow">' +
+      S.esc(s.name) + (s.bodyPart ? ' <span class="muted">('+S.esc(s.bodyPart)+')</span>' : '') +
+      ' — <span class="ar">'+S.esc(e?e.nameAr:'?')+'</span> · ' +
+      S.fmtHM(s.startMin)+'–'+S.fmtHM(s.startMin+s.durationMin) +
+      ' · <span class="money">'+S.esc(priceTxt)+'</span>' +
+      '</div></div>';
+  }
+
+  var totalsHtml = '';
+  var curs = S.activeCurrencies();
+  for(var k2=0;k2<curs.length;k2++){
+    var cur = curs[k2];
+    var tt = pay.totals[cur.code]||0;
+    var pp = pay.paid[cur.code]||0;
+    if(tt===0 && pp===0) continue;
+    totalsHtml += '<div class="t money">' +
+      '<span class="lbl">'+cur.code+':</span> '+S.fmtMoney(tt, cur.code) +
+      (pp>0 ? ' <span class="lbl">(paid '+S.fmtMoney(pp,cur.code)+')</span>' : '') +
+    '</div>';
+  }
+  if(!totalsHtml) totalsHtml = '<div class="muted small">No amounts recorded</div>';
+
+  var statusTag = '';
+  if(pay.status === 'paid')         statusTag = '<span class="paidTag">✓ Fully Paid</span>';
+  else if(pay.status === 'partial') statusTag = '<span class="partialTag">Partial</span>';
+  else                              statusTag = '<span class="unpaidTag">Unpaid</span>';
+
+  var payTimestamp = '';
+  if(a.paidAt){
+    payTimestamp = '<div class="small muted" style="margin-top:4px">Paid at '+S.esc(S.fmtDateTimeShort(a.paidAt))+'</div>';
+  }
+
+  var html =
+    '<h2>Appointment</h2>' +
+    '<div class="small muted">'+S.esc(S.fmtDateLong(a.date))+'</div>' +
+    '<div class="card">' +
+      '<div class="nmAr" style="font-size:18px;direction:rtl;text-align:right">'+S.esc(clientName)+'</div>' +
+      '<div class="muted">'+S.esc(clientPhone)+'</div>' +
+      '<div class="hr"></div>' +
+      svcList +
+      '<div class="hr"></div>' +
+      '<div class="totalsBar">'+totalsHtml+' '+statusTag+'</div>' +
+      payTimestamp +
+      (a.notes ? '<div class="hr"></div><div class="small"><b>Notes:</b> '+S.esc(a.notes)+'</div>' : '') +
+      '<div class="hr"></div>' +
+      '<div class="small muted">Booked on '+S.esc(a.bookedOn||'—')+'</div>' +
+    '</div>' +
+    '<div class="row" style="margin-top:8px">' +
+      '<button class="primary grow" id="aPay">💰 '+(a.paid ? 'Update Payment' : 'Mark as Paid')+'</button>' +
+    '</div>' +
+    (a.paid ? '<div class="row" style="margin-top:6px"><button class="danger grow small" id="aClearPay">Clear Payment</button></div>' : '') +
+    '<div class="row" style="margin-top:8px">' +
+      '<button class="grow danger" id="aDel">Delete</button>' +
+      '<button class="grow" id="aEdit">Edit</button>' +
+      '<button class="grow" id="aClose">Close</button>' +
+    '</div>';
+  S.openSheet(html);
+
+  document.getElementById('aClose').onclick = function(){ document.getElementById('sheetClose').click(); };
+  document.getElementById('aPay').onclick = function(){
+    paymentSheet(a, function(){
+      document.getElementById('sheetClose').click();
+      openApptActions(apptId);
+      renderDay();
+    });
+  };
+  var clrBtn = document.getElementById('aClearPay');
+  if(clrBtn){
+    clrBtn.onclick = function(){
+      S.confirmDialog('Clear the recorded payment for this appointment?', function(){
+        delete a.paid; delete a.paidAt;
+        saveDB();
+        document.getElementById('sheetClose').click();
+        openApptActions(apptId);
+        renderDay();
+        S.toast('Payment cleared');
+      });
+    };
+  }
+  document.getElementById('aDel').onclick = function(){
+    S.confirmDialog('Delete this appointment?', function(){
+      var out = [];
+      var list = DB().appointments;
+      for(var x=0;x<list.length;x++) if(list[x].id!==apptId) out.push(list[x]);
+      DB().appointments = out;
+      saveDB();
+      document.getElementById('sheetClose').click();
+      renderDay();
+      S.toast('Deleted');
+    });
+  };
+  document.getElementById('aEdit').onclick = function(){
+    var out = [];
+    var list = DB().appointments;
+    for(var x=0;x<list.length;x++) if(list[x].id!==apptId) out.push(list[x]);
+    DB().appointments = out;
+    saveDB();
+    document.getElementById('sheetClose').click();
+    var prefillSvcs = [];
+    for(var z=0;z<a.services.length;z++){
+      var s = a.services[z];
+      prefillSvcs.push({
+        svcId:s.svcId, name:s.name, empId:s.empId, durationMin:s.durationMin,
+        bodyPart:s.bodyPart||'', price:s.price, currency:s.currency
+      });
+    }
+    openBooking({
+      date: a.date,
+      startMin: a.startMin,
+      prefillServices: prefillSvcs,
+      prefillClientId: a.clientId,
+      prefillNotes: a.notes
+    });
+  };
+}
+
+function paymentSheet(a, onSaved){
+  var pay = S.apptPaymentTotals(a);
+  var rows = '';
+  var anyRow = false;
+  var curs = S.activeCurrencies();
+  for(var i=0;i<curs.length;i++){
+    var cur = curs[i];
+    var t = pay.totals[cur.code]||0;
+    if(t <= 0) continue;
+    anyRow = true;
+    var currentPaid = (a.paid && a.paid[cur.code]) ? a.paid[cur.code] : 0;
+    rows += '<label>'+cur.label+' — total '+S.fmtMoney(t, cur.code)+'</label>' +
+      '<input class="payInput" data-cur="'+cur.code+'" type="number" min="0" step="0.01" ' +
+        'value="'+(currentPaid||'')+'" placeholder="0">';
+  }
+  if(!anyRow){
+    rows = '<div class="small muted">No prices recorded on this appointment. Add prices in the booking first.</div>';
+  }
+  var html =
+    '<h2>Mark as Paid</h2>' +
+    '<div class="small muted">Enter the amount received in each currency. Leave blank or 0 for none.</div>' +
+    rows +
+    '<div class="row" style="margin-top:14px">' +
+      '<button class="grow" id="payCancel">Cancel</button>' +
+      (anyRow ? '<button class="primary grow" id="paySave">Save Payment</button>' : '') +
+    '</div>';
+  S.openSheet(html);
+  document.getElementById('payCancel').onclick = function(){ document.getElementById('sheetClose').click(); };
+  var saveBtn = document.getElementById('paySave');
+  if(saveBtn){
+    saveBtn.onclick = function(){
+      var paidMap = {};
+      var inputs = document.querySelectorAll('.payInput');
+      for(var i=0;i<inputs.length;i++){
+        var v = Number(inputs[i].value)||0;
+        if(v > 0) paidMap[inputs[i].dataset.cur] = v;
+      }
+      if(Object.keys(paidMap).length === 0){
+        S.toast('Enter at least one amount');
+        return;
+      }
+      a.paid = paidMap;
+      a.paidAt = Date.now();
+      saveDB();
+      document.getElementById('sheetClose').click();
+      if(onSaved) onSaved();
+      S.toast('Payment saved');
+    };
+  }
+}
+
+/* ============================================================
+   CLIENT PICKERS + CLIENTS TAB
+   ============================================================ */
+function pickClientSheet(onPick){
+  var q = { s:'' };
+  render();
+  function render(){
+    var list = [];
+    var all = DB().clients;
+    for(var i=0;i<all.length;i++){
+      var c = all[i];
+      if(q.s && (c.nameAr||'').indexOf(q.s) < 0 && (c.phone||'').indexOf(q.s) < 0) continue;
+      list.push(c);
+    }
+    list.sort(function(a,b){ return (a.nameAr||'').localeCompare(b.nameAr||'','ar'); });
+    var html = '<h2>Pick Client</h2>' +
+      '<input id="pSearch" placeholder="Search name or phone…" value="'+S.esc(q.s)+'" dir="auto">' +
+      '<div class="hr"></div><div id="pList">';
+    if(!list.length) html += '<div class="empty">No clients found.</div>';
+    else for(var j=0;j<list.length;j++){
+      var c2 = list[j];
+      html += '<div class="listRow">' +
+        '<div class="grow"><div class="nmAr">'+S.esc(c2.nameAr)+'</div>' +
+        '<div class="meta">'+S.esc(c2.phone||'')+'</div></div>' +
+        '<button class="small primary" data-pick="'+c2.id+'">Pick</button>' +
+      '</div>';
+    }
+    html += '</div>' +
+      '<div class="row" style="margin-top:10px">' +
+        '<button class="grow" id="pCancel">Cancel</button>' +
+        '<button class="grow primary" id="pNew">+ New Client</button>' +
+      '</div>';
+    S.openSheet(html);
+    var se = document.getElementById('pSearch');
+    se.oninput = function(){ q.s = se.value; render(); };
+    document.getElementById('pCancel').onclick = function(){ document.getElementById('sheetClose').click(); };
+    document.getElementById('pNew').onclick = function(){ newClientSheet(onPick); };
+    var picks = document.querySelectorAll('[data-pick]');
+    for(var k=0;k<picks.length;k++){
+      (function(b){
+        b.onclick = function(){
+          var id = b.dataset.pick;
+          document.getElementById('sheetClose').click();
+          onPick(id);
+        };
+      })(picks[k]);
+    }
+  }
+}
+
+function newClientSheet(onSaved){
+  S.openSheet(
+    '<h2>New Client</h2>' +
+    '<label>Arabic name</label>' +
+    '<input id="ncName" dir="rtl" placeholder="مثال: نورة">' +
+    '<label>Phone</label>' +
+    '<input id="ncPhone" inputmode="tel" placeholder="05xxxxxxxx">' +
+    '<div class="row" style="margin-top:12px">' +
+      '<button class="grow" id="ncCancel">Cancel</button>' +
+      '<button class="primary grow" id="ncSave">Save</button>' +
+    '</div>'
+  );
+  document.getElementById('ncCancel').onclick = function(){ document.getElementById('sheetClose').click(); };
+  document.getElementById('ncSave').onclick = function(){
+    var nameAr = document.getElementById('ncName').value.trim();
+    var phone = document.getElementById('ncPhone').value.trim();
+    if(!nameAr){ S.toast('Name required'); return; }
+    if(phone){
+      var existing = S.clientByPhone(phone);
+      if(existing){
+        existing.nameAr = nameAr;
+        saveDB();
+        document.getElementById('sheetClose').click();
+        if(onSaved) onSaved(existing.id);
+        return;
+      }
+    }
+    var c = { id: S.uid(), nameAr: nameAr, phone: phone, createdAt: Date.now() };
+    DB().clients.push(c);
+    saveDB();
+    document.getElementById('sheetClose').click();
+    if(onSaved) onSaved(c.id);
+  };
+}
+
+function renderClientsReal(){
+  var q = (document.getElementById('clientSearch').value || '').trim();
+  var list = [];
+  var all = DB().clients;
+  for(var i=0;i<all.length;i++){
+    var c = all[i];
+    if(q && (c.nameAr||'').indexOf(q) < 0 && (c.phone||'').indexOf(q) < 0) continue;
+    list.push(c);
+  }
+  list.sort(function(a,b){ return (b.createdAt||0)-(a.createdAt||0); });
+  var holder = document.getElementById('clientsList');
+  if(!list.length){ holder.innerHTML = '<div class="empty">No clients yet. Tap + Add.</div>'; return; }
+  var html = '';
+  for(var j=0;j<list.length;j++){
+    var c2 = list[j];
+    var apptsCount = 0;
+    var apptsAll = DB().appointments;
+    for(var k=0;k<apptsAll.length;k++) if(apptsAll[k].clientId===c2.id) apptsCount++;
+    html += '<div class="listRow">' +
+      '<div class="grow">' +
+        '<div class="nmAr">'+S.esc(c2.nameAr)+'</div>' +
+        '<div class="meta">'+S.esc(c2.phone||'—')+' · '+apptsCount+' appt(s)</div>' +
+      '</div>' +
+      '<button class="small" data-hist="'+c2.id+'">History</button>' +
+      '<button class="small" data-edit="'+c2.id+'">Edit</button>' +
+      '<button class="small danger" data-del="'+c2.id+'">Del</button>' +
+    '</div>';
+  }
+  holder.innerHTML = html;
+  var bs = holder.querySelectorAll('[data-edit]');
+  for(var m=0;m<bs.length;m++) bs[m].onclick = function(){ editClient(this.dataset.edit); };
+  bs = holder.querySelectorAll('[data-del]');
+  for(var n=0;n<bs.length;n++) bs[n].onclick = function(){ delClient(this.dataset.del); };
+  bs = holder.querySelectorAll('[data-hist]');
+  for(var p=0;p<bs.length;p++) bs[p].onclick = function(){ clientHistory(this.dataset.hist); };
+}
+document.getElementById('clientSearch').oninput = renderClientsReal;
+document.getElementById('btnAddClient').onclick = function(){
+  newClientSheet(function(){ renderClientsReal(); S.toast('Client saved'); });
+};
+
+function editClient(id){
+  var c = S.clientById(id);
+  S.openSheet(
+    '<h2>Edit Client</h2>' +
+    '<label>Arabic name</label>' +
+    '<input id="ecName" dir="rtl" value="'+S.esc(c.nameAr)+'">' +
+    '<label>Phone</label>' +
+    '<input id="ecPhone" inputmode="tel" value="'+S.esc(c.phone||'')+'">' +
+    '<div class="row" style="margin-top:12px">' +
+      '<button class="grow" id="ecCancel">Cancel</button>' +
+      '<button class="primary grow" id="ecSave">Save</button>' +
+    '</div>'
+  );
+  document.getElementById('ecCancel').onclick = function(){ document.getElementById('sheetClose').click(); };
+  document.getElementById('ecSave').onclick = function(){
+    var nameAr = document.getElementById('ecName').value.trim();
+    var phone = document.getElementById('ecPhone').value.trim();
+    if(!nameAr){ S.toast('Name required'); return; }
+    c.nameAr = nameAr; c.phone = phone;
+    saveDB();
+    document.getElementById('sheetClose').click();
+    renderClientsReal();
+    S.toast('Saved');
+  };
+}
+function delClient(id){
+  var c = S.clientById(id);
+  var apptsCount = 0;
+  var apptsAll = DB().appointments;
+  for(var k=0;k<apptsAll.length;k++) if(apptsAll[k].clientId===id) apptsCount++;
+  S.confirmDialog('Delete "'+c.nameAr+'"? They have '+apptsCount+' appointment(s) kept in history.', function(){
+    var out = [];
+    var list = DB().clients;
+    for(var i=0;i<list.length;i++) if(list[i].id!==id) out.push(list[i]);
+    DB().clients = out;
+    saveDB(); renderClientsReal();
+    S.toast('Deleted');
+  });
+}
+function clientHistory(id){
+  var c = S.clientById(id);
+  var list = [];
+  var all = DB().appointments;
+  for(var i=0;i<all.length;i++) if(all[i].clientId===id) list.push(all[i]);
+  list.sort(function(a,b){
+    var ka = a.date + String(10000+a.startMin);
+    var kb = b.date + String(10000+b.startMin);
+    return kb.localeCompare(ka);
+  });
+  var html = '<h2>History — <span dir="rtl">'+S.esc(c.nameAr)+'</span></h2>';
+  html += '<div class="muted small">'+S.esc(c.phone||'')+'</div><div class="hr"></div>';
+  if(!list.length){ html += '<div class="empty">No appointments yet.</div>'; }
+  else for(var j=0;j<list.length;j++){
+    var a = list[j];
+    var svcTxt = '';
+    for(var k=0;k<a.services.length;k++){
+      var s = a.services[k];
+      var e = S.empById(s.empId);
+      var priceTxt = (Number(s.price)>0) ? ' · '+S.fmtMoney(s.price, s.currency||'NIS') : '';
+      svcTxt += S.esc(s.name) + (s.bodyPart ? ' ('+S.esc(s.bodyPart)+')' : '') +
+        ' · ' + S.esc(e?e.nameAr:'?') + priceTxt + '<br>';
+    }
+    var pay = S.apptPaymentTotals(a);
+    html += '<div class="card">' +
+      '<div><b>'+S.esc(S.fmtDateLong(a.date))+'</b> · '+S.esc(S.fmtHM(a.startMin))+'–'+S.esc(S.fmtHM(a.startMin+a.totalMin))+'</div>' +
+      '<div class="small" style="margin-top:4px">'+svcTxt+'</div>' +
+      '<div class="totalsBar" style="margin-top:6px">'+S.totalsBarHtml(pay.totals, pay.paid)+'</div>' +
+    '</div>';
+  }
+  S.openSheet(html);
+}
+
+/* ============================================================
+   REPORTS TAB
+   ============================================================ */
+function renderReportsReal(){ /* nothing to prerender */ }
+
+document.getElementById('btnBookedOn').onclick = function(){
+  var d = document.getElementById('bookedOnDate').value;
+  if(!d) return;
+  var list = [];
+  var all = DB().appointments;
+  for(var i=0;i<all.length;i++) if(all[i].bookedOn === d) list.push(all[i]);
+  var holder = document.getElementById('bookedOnResult');
+  if(!list.length){ holder.innerHTML = '<div class="empty">Nothing booked on this day.</div>'; return; }
+  list.sort(function(a,b){
+    return (a.date + String(10000+a.startMin)).localeCompare(b.date + String(10000+b.startMin));
+  });
+  var html = '<div class="small muted">'+list.length+' appointment(s) created:</div>';
+  for(var j=0;j<list.length;j++){
+    var a = list[j];
+    var c = S.clientById(a.clientId);
+    var name = c ? c.nameAr : (a.clientNameSnapshot||'');
+    var svc = '';
+    for(var k=0;k<a.services.length;k++){
+      var s = a.services[k];
+      var e = S.empById(s.empId);
+      var priceTxt = (Number(s.price)>0) ? ' ('+S.fmtMoney(s.price, s.currency||'NIS')+')' : '';
+      svc += S.esc(s.name)+(s.bodyPart?' ('+S.esc(s.bodyPart)+')':'')+' · '+S.esc(e?e.nameAr:'?')+priceTxt+'; ';
+    }
+    var pay = S.apptPaymentTotals(a);
+    html += '<div class="listRow"><div class="grow">' +
+      '<div class="nmAr">'+S.esc(name)+'</div>' +
+      '<div class="meta">For '+S.esc(a.date)+' at '+S.esc(S.fmtHM(a.startMin))+'</div>' +
+      '<div class="small">'+svc+'</div>' +
+      '<div class="totalsBar" style="margin-top:6px">'+S.totalsBarHtml(pay.totals, pay.paid)+'</div>' +
+    '</div></div>';
+  }
+  holder.innerHTML = html;
+};
+
+/* ============================================================
+   DAY CSV EXPORT (with totals + unpaid by employee)
+   ============================================================ */
+function csvCell(v){
+  var s = String(v==null?'':v);
+  if(/[",\r\n]/.test(s)) return '"' + s.replace(/"/g,'""') + '"';
+  return s;
+}
+function downloadBlob(text, fname, mime){
+  var blob = new Blob([text], { type: mime });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url; a.download = fname; a.style.display='none';
+  document.body.appendChild(a); a.click();
+  setTimeout(function(){ URL.revokeObjectURL(url); a.remove(); }, 500);
+}
+
+function buildDayCsv(dateYmd){
+  var appts = S.apptsOnDate(dateYmd);
+  var header = ['Date','Start','End','Client','Phone','Service','Body Part','Employee',
+                'Duration Min','Price','Currency','Paid','Paid At','Notes'];
+  var rows = [];
+  rows.push(header.map(csvCell).join(','));
+
+  var totals = {};
+  var paids  = {};
+  var curs = S.activeCurrencies();
+  for(var ci=0;ci<curs.length;ci++){ totals[curs[ci].code]=0; paids[curs[ci].code]=0; }
+
+  var unpaidByEmp = {};
+
+  for(var i=0;i<appts.length;i++){
+    var a = appts[i];
+    var c = S.clientById(a.clientId);
+    var name = c ? c.nameAr : (a.clientNameSnapshot||'');
+    var phone = c ? (c.phone||'') : (a.clientPhoneSnapshot||'');
+    var pt = S.apptPaymentTotals(a);
+    for(var k in pt.totals){
+      if(!Object.prototype.hasOwnProperty.call(pt.totals,k)) continue;
+      if(totals[k] == null) totals[k]=0;
+      if(paids[k] == null) paids[k]=0;
+      totals[k] += pt.totals[k]||0;
+      paids[k]  += pt.paid[k]||0;
+    }
+
+    var svcs = a.services || [];
+    var totalsPerCur = {};
+    for(var si=0;si<svcs.length;si++){
+      var sc = svcs[si].currency || 'NIS';
+      if(totalsPerCur[sc] == null) totalsPerCur[sc] = 0;
+      totalsPerCur[sc] += Number(svcs[si].price)||0;
+    }
+    var paidPerCur = {};
+    if(a.paid && typeof a.paid === 'object'){
+      for(var pk in a.paid){
+        if(!Object.prototype.hasOwnProperty.call(a.paid,pk)) continue;
+        paidPerCur[pk] = Number(a.paid[pk])||0;
+      }
+    }
+    for(var sj=0;sj<svcs.length;sj++){
+      var s2 = svcs[sj];
+      var cur2 = s2.currency || 'NIS';
+      var svcPrice = Number(s2.price)||0;
+      var curTotal = totalsPerCur[cur2]||0;
+      var curPaid = paidPerCur[cur2]||0;
+      var share = (curTotal > 0) ? (svcPrice / curTotal) : 0;
+      var paidShare = curPaid * share;
+      var unpaidShare = svcPrice - paidShare;
+      if(unpaidShare <= 0.001) continue;
+      if(!unpaidByEmp[s2.empId]) unpaidByEmp[s2.empId] = {};
+      if(!unpaidByEmp[s2.empId][cur2]) unpaidByEmp[s2.empId][cur2] = 0;
+      unpaidByEmp[s2.empId][cur2] += unpaidShare;
+    }
+
+    for(var j=0;j<a.services.length;j++){
+      var s = a.services[j];
+      var e = S.empById(s.empId);
+      var paidAmt = (a.paid && a.paid[s.currency||'NIS']) ? a.paid[s.currency||'NIS'] : '';
+      rows.push([
+        a.date,
+        S.fmtHM(s.startMin),
+        S.fmtHM(s.startMin + s.durationMin),
+        name, phone,
+        s.name, s.bodyPart||'',
+        e ? e.nameAr : '',
+        s.durationMin,
+        (s.price!=null ? s.price : ''),
+        (s.currency||'NIS'),
+        paidAmt,
+        (a.paidAt ? S.fmtDateTimeShort(a.paidAt) : ''),
+        a.notes||''
+      ].map(csvCell).join(','));
+    }
+  }
+
+  rows.push('');
+  rows.push('"DAY TOTALS — ' + dateYmd + '"');
+  for(var m=0;m<curs.length;m++){
+    var cur = curs[m];
+    var t = totals[cur.code]||0;
+    var p = paids[cur.code]||0;
+    if(t===0 && p===0) continue;
+    rows.push([ '', '', '', '', '', '', '', '', '', '', cur.code, 'Total', '', '' ]
+      .map(csvCell).join(',').replace(/,,+$/, '') + ',' + csvCell(t));
+    rows.push([ '', '', '', '', '', '', '', '', '', '', cur.code, 'Paid', '', '' ]
+      .map(csvCell).join(',').replace(/,,+$/, '') + ',' + csvCell(p));
+    rows.push([ '', '', '', '', '', '', '', '', '', '', cur.code, 'Outstanding', '', '' ]
+      .map(csvCell).join(',').replace(/,,+$/, '') + ',' + csvCell(t - p));
+  }
+
+  var empIds = Object.keys(unpaidByEmp);
+  if(empIds.length){
+    rows.push('');
+    rows.push('"UNPAID BY EMPLOYEE"');
+    rows.push([ 'Employee', 'Currency', 'Unpaid' ].map(csvCell).join(','));
+    for(var ei=0;ei<empIds.length;ei++){
+      var empId = empIds[ei];
+      var emp = S.empById(empId);
+      var empName = emp ? emp.nameAr : '?';
+      var curs2 = unpaidByEmp[empId];
+      for(var cc=0;cc<curs.length;cc++){
+        var ccode = curs[cc].code;
+        if(!curs2[ccode] || curs2[ccode] <= 0.001) continue;
+        rows.push([ empName, ccode, curs2[ccode] ].map(csvCell).join(','));
+      }
+    }
+  }
+
+  return '\uFEFF' + rows.join('\r\n');
+}
+
+document.getElementById('btnExportDayCsv').onclick = function(){
+  var d = document.getElementById('exportDayDate').value;
+  if(!d){ S.toast('Pick a date'); return; }
+  var csv = buildDayCsv(d);
+  downloadBlob(csv, 'salon_day_' + d + '.csv', 'text/csv;charset=utf-8');
+  S.toast('Exported ' + d);
+};
+
+document.getElementById('btnPreviewDayCsv').onclick = function(){
+  var d = document.getElementById('exportDayDate').value;
+  if(!d){ S.toast('Pick a date'); return; }
+  var appts = S.apptsOnDate(d);
+  var totals = {}, paids = {};
+  var curs = S.activeCurrencies();
+  for(var ci=0;ci<curs.length;ci++){ totals[curs[ci].code]=0; paids[curs[ci].code]=0; }
+  for(var i=0;i<appts.length;i++){
+    var pt = S.apptPaymentTotals(appts[i]);
+    for(var k in pt.totals){
+      if(!Object.prototype.hasOwnProperty.call(pt.totals,k)) continue;
+      if(totals[k] == null) totals[k]=0;
+      if(paids[k] == null) paids[k]=0;
+      totals[k] += pt.totals[k]||0;
+      paids[k]  += pt.paid[k]||0;
+    }
+  }
+  var html = '<div class="small"><b>' + S.esc(S.fmtDateLong(d)) + '</b> — ' + appts.length + ' appointment(s)</div>';
+  if(!appts.length){
+    html += '<div class="empty">No appointments on this day.</div>';
+  } else {
+    for(var j=0;j<appts.length;j++){
+      var a = appts[j];
+      var c = S.clientById(a.clientId);
+      var nm = c ? c.nameAr : (a.clientNameSnapshot||'');
+      html += '<div class="card" style="margin:6px 0;padding:8px">' +
+        '<div class="ar" style="direction:rtl;font-weight:700">' + S.esc(nm) + '</div>' +
+        '<div class="small muted">' + S.esc(S.fmtHM(a.startMin)) + '–' + S.esc(S.fmtHM(a.startMin + a.totalMin)) + '</div>';
+      for(var m=0;m<a.services.length;m++){
+        var s = a.services[m];
+        var e = S.empById(s.empId);
+        html += '<div class="small">' +
+          S.esc(s.name) + (s.bodyPart ? ' (' + S.esc(s.bodyPart) + ')' : '') +
+          ' — ' + S.esc(e ? e.nameAr : '?') +
+          ' — ' + S.esc(S.fmtMoney(s.price||0, s.currency||'NIS')) +
+        '</div>';
+      }
+      html += '</div>';
+    }
+  }
+  var totLines = '';
+  for(var n=0;n<curs.length;n++){
+    var cur = curs[n];
+    var t = totals[cur.code]||0;
+    var p = paids[cur.code]||0;
+    if(t===0 && p===0) continue;
+    totLines += '<div><b>' + cur.code + ':</b> Total ' + S.fmtMoney(t, cur.code) +
+      ' · Paid ' + S.fmtMoney(p, cur.code) +
+      ' · Outstanding ' + S.fmtMoney(t - p, cur.code) + '</div>';
+  }
+  if(totLines){
+    html += '<div class="totalsBar" style="flex-direction:column;align-items:flex-start">' + totLines + '</div>';
+  }
+  document.getElementById('dayCsvPreview').innerHTML = html;
+};
+
+/* ============================================================
+   MONTHLY CSV EXPORT + PRINT
+   ============================================================ */
+document.getElementById('btnMonCsv').onclick = function(){
+  var y = S.monYear, m = S.monMonth;
+  if(y == null || m == null){ S.toast('Open Monthly tab first'); return; }
+  var rep = S.computeMonthReport(y, m);
+  var label = S.monthLabel(y, m);
+  var lines = [];
+  var curs = S.activeCurrencies();
+  function row(arr){ lines.push(arr.map(csvCell).join(',')); }
+  function blank(){ lines.push(''); }
+  function section(title){ blank(); row(['== '+title+' ==']); }
+
+  row(['Monthly Report', label]);
+  blank();
+  row(['Metric','Currency','Amount']);
+  row(['Appointments', '', rep.apptCount]);
+
+  section('REVENUE');
+  row(['Currency','Total','Paid','Outstanding']);
+  for(var i=0;i<curs.length;i++){
+    var c = curs[i];
+    var r = rep.revenue[c.code]||{total:0,paid:0};
+    if(r.total === 0 && r.paid === 0) continue;
+    row([c.code, r.total, r.paid, r.total - r.paid]);
+  }
+
+  section('BY EMPLOYEE');
+  row(['Employee','Currency','Revenue','Paid','Unpaid','Commission %','Commission Amount']);
+  var empIds = Object.keys(rep.byEmployee);
+  for(var ei=0;ei<empIds.length;ei++){
+    var empId = empIds[ei];
+    var be = rep.byEmployee[empId];
+    var emp = S.empById(empId);
+    var pct = emp ? (Number(emp.commissionPct)||0) : 0;
+    for(var ci=0;ci<curs.length;ci++){
+      var cc = curs[ci];
+      var rev = be.revenue[cc.code]||0;
+      var pd = be.paid[cc.code]||0;
+      if(rev === 0 && pd === 0) continue;
+      row([be.nameAr, cc.code, rev, pd, rev-pd, pct, pd*(pct/100)]);
+    }
+  }
+
+  section('PAYROLL');
+  row(['Employee','Type','Currency','Amount']);
+  var payrollByCur = {};
+  for(var pi=0;pi<empIds.length;pi++){
+    var peId = empIds[pi];
+    var pEmp = S.empById(peId);
+    if(!pEmp) continue;
+    var pBe = rep.byEmployee[peId];
+    var pPct = Number(pEmp.commissionPct)||0;
+    var pBase = Number(pEmp.baseSalary)||0;
+    var pBaseCur = pEmp.salaryCurrency || 'NIS';
+    row([pEmp.nameAr, 'Base salary', pBaseCur, pBase]);
+    if(!payrollByCur[pBaseCur]) payrollByCur[pBaseCur] = 0;
+    payrollByCur[pBaseCur] += pBase;
+    for(var pci=0;pci<curs.length;pci++){
+      var pcc = curs[pci];
+      var pPaid = pBe.paid[pcc.code]||0;
+      if(pPaid === 0) continue;
+      var pComm = pPaid * (pPct/100);
+      if(pComm === 0) continue;
+      row([pEmp.nameAr, 'Commission', pcc.code, pComm]);
+      if(!payrollByCur[pcc.code]) payrollByCur[pcc.code] = 0;
+      payrollByCur[pcc.code] += pComm;
+    }
+  }
+  blank();
+  row(['TOTAL PAYROLL']);
+  for(var pkc=0;pkc<curs.length;pkc++){
+    var pkc2 = curs[pkc];
+    if(payrollByCur[pkc2.code]) row(['', '', pkc2.code, payrollByCur[pkc2.code]]);
+  }
+
+  section('EXPENSES');
+  row(['Currency','Total','Paid','Unpaid']);
+  for(var exi=0;exi<curs.length;exi++){
+    var exc = curs[exi];
+    var eTot = rep.expenses[exc.code] || {total:0,paid:0,unpaid:0};
+    if(eTot.total === 0) continue;
+    row([exc.code, eTot.total, eTot.paid, eTot.unpaid]);
+  }
+
+  section('NET PER CURRENCY (revenue - payroll - expenses)');
+  row(['Currency','Revenue','Payroll','Expenses','Net']);
+  for(var ni=0;ni<curs.length;ni++){
+    var nc = curs[ni];
+    var rev2 = (rep.revenue[nc.code]||{}).total || 0;
+    var exp2 = (rep.expenses[nc.code]||{}).total || 0;
+    var pay2 = payrollByCur[nc.code]||0;
+    if(rev2 === 0 && exp2 === 0 && pay2 === 0) continue;
+    row([nc.code, rev2, pay2, exp2, rev2 - exp2 - pay2]);
+  }
+
+  var csv = '\uFEFF' + lines.join('\r\n');
+  var fname = 'salon_month_' + y + '-' + S.pad(m+1) + '.csv';
+  downloadBlob(csv, fname, 'text/csv;charset=utf-8');
+  S.toast('Exported ' + label);
+};
+
+document.getElementById('btnMonPrint').onclick = function(){
+  var y = S.monYear, m = S.monMonth;
+  if(y == null || m == null){ S.toast('Open Monthly tab first'); return; }
+  var rep = S.computeMonthReport(y, m);
+  var label = S.monthLabel(y, m);
+  var curs = S.activeCurrencies();
+
+  var h = '<div class="printSheet">';
+  h += '<div class="printHead">Monthly Report — ' + S.esc(label) + '</div>';
+  h += '<div>Appointments: ' + rep.apptCount + '</div>';
+
+  h += '<div class="hr"></div><b>Revenue</b>';
+  for(var i=0;i<curs.length;i++){
+    var c = curs[i];
+    var r = rep.revenue[c.code]||{total:0,paid:0};
+    if(r.total === 0 && r.paid === 0) continue;
+    h += '<div>'+c.code+': total '+S.fmtMoney(r.total,c.code)+
+         ' · paid '+S.fmtMoney(r.paid,c.code)+
+         ' · outstanding '+S.fmtMoney(r.total - r.paid, c.code)+'</div>';
+  }
+
+  h += '<div class="hr"></div><b>By Employee</b>';
+  var empIds = Object.keys(rep.byEmployee);
+  for(var ei=0;ei<empIds.length;ei++){
+    var empId = empIds[ei];
+    var be = rep.byEmployee[empId];
+    var emp = S.empById(empId);
+    var pct = emp ? (Number(emp.commissionPct)||0) : 0;
+    h += '<div style="margin-top:6px"><b>'+S.esc(be.nameAr)+'</b> ('+pct+'%)</div>';
+    for(var ci=0;ci<curs.length;ci++){
+      var cc = curs[ci];
+      var rev = be.revenue[cc.code]||0;
+      var pd = be.paid[cc.code]||0;
+      if(rev === 0 && pd === 0) continue;
+      h += '<div style="font-size:13px">'+cc.code+
+        ' — revenue '+S.fmtMoney(rev,cc.code)+
+        ' · paid '+S.fmtMoney(pd,cc.code)+
+        ' · unpaid '+S.fmtMoney(rev-pd,cc.code)+
+        ' · commission '+S.fmtMoney(pd*(pct/100),cc.code)+'</div>';
+    }
+  }
+
+  h += '<div class="hr"></div><b>Payroll</b>';
+  var payrollByCur = {};
+  for(var pi=0;pi<empIds.length;pi++){
+    var pEmp = S.empById(empIds[pi]);
+    if(!pEmp) continue;
+    var pBe = rep.byEmployee[empIds[pi]];
+    var pPct = Number(pEmp.commissionPct)||0;
+    var pBase = Number(pEmp.baseSalary)||0;
+    var pBaseCur = pEmp.salaryCurrency || 'NIS';
+    h += '<div style="font-size:13px"><b>'+S.esc(pEmp.nameAr)+'</b> — base '+S.fmtMoney(pBase,pBaseCur);
+    if(!payrollByCur[pBaseCur]) payrollByCur[pBaseCur] = 0;
+    payrollByCur[pBaseCur] += pBase;
+    for(var pci=0;pci<curs.length;pci++){
+      var pcc = curs[pci];
+      var pPaid = pBe.paid[pcc.code]||0;
+      if(pPaid === 0) continue;
+      var pComm = pPaid*(pPct/100);
+      if(pComm === 0) continue;
+      h += ' + comm '+S.fmtMoney(pComm,pcc.code);
+      if(!payrollByCur[pcc.code]) payrollByCur[pcc.code] = 0;
+      payrollByCur[pcc.code] += pComm;
+    }
+    h += '</div>';
+  }
+  h += '<div><b>Total payroll:</b> ';
+  var ptxt = [];
+  for(var pkc=0;pkc<curs.length;pkc++){
+    var pkc2 = curs[pkc];
+    if(payrollByCur[pkc2.code]) ptxt.push(pkc2.code+' '+S.fmtMoney(payrollByCur[pkc2.code], pkc2.code));
+  }
+  h += ptxt.join(' · ') || '—';
+  h += '</div>';
+
+  h += '<div class="hr"></div><b>Expenses</b>';
+  for(var exi=0;exi<curs.length;exi++){
+    var exc = curs[exi];
+    var eTot = rep.expenses[exc.code] || {total:0,paid:0,unpaid:0};
+    if(eTot.total === 0) continue;
+    h += '<div>'+exc.code+': '+S.fmtMoney(eTot.total,exc.code)+
+         ' (paid '+S.fmtMoney(eTot.paid,exc.code)+
+         ' · unpaid '+S.fmtMoney(eTot.unpaid,exc.code)+')</div>';
+  }
+
+  h += '<div class="hr"></div><b>Net (per currency)</b>';
+  for(var ni=0;ni<curs.length;ni++){
+    var nc = curs[ni];
+    var rev2 = (rep.revenue[nc.code]||{}).total || 0;
+    var exp2 = (rep.expenses[nc.code]||{}).total || 0;
+    var pay2 = payrollByCur[nc.code]||0;
+    if(rev2 === 0 && exp2 === 0 && pay2 === 0) continue;
+    h += '<div>'+nc.code+': '+S.fmtMoney(rev2,nc.code)+' - '+
+         S.fmtMoney(pay2,nc.code)+' - '+S.fmtMoney(exp2,nc.code)+
+         ' = <b>'+S.fmtMoney(rev2-pay2-exp2, nc.code)+'</b></div>';
+  }
+
+  h += '</div>';
+
+  var area = document.getElementById('printArea');
+  area.innerHTML = h;
+  area.classList.remove('hidden');
+  setTimeout(function(){
+    window.print();
+    setTimeout(function(){ area.classList.add('hidden'); area.innerHTML=''; }, 300);
+  }, 50);
+};
+
+/* ============================================================
+   PRINT DAY SHEET
+   ============================================================ */
+function printDaySheet(dateYmd){
+  var appts = S.apptsOnDate(dateYmd);
+  var curs = S.activeCurrencies();
+  var html = '<div class="printSheet">';
+  var name = DB().settings.salonName || 'Salon';
+  html += '<div style="font-size:12px;color:#666;margin-bottom:2px">' + S.esc(name) + '</div>';
+  html += '<div class="printHead">'+S.esc(S.fmtDateLong(dateYmd))+' — '+appts.length+' appointment(s)</div>';
+  if(!appts.length){
+    html += '<div>No appointments.</div>';
+  } else {
+    var unpaidByEmp = {};
+
+    for(var i=0;i<appts.length;i++){
+      var a = appts[i];
+      var c = S.clientById(a.clientId);
+      var cname = c ? c.nameAr : (a.clientNameSnapshot||'');
+      var phone = c ? (c.phone||'') : (a.clientPhoneSnapshot||'');
+      var start = a.startMin;
+      var end = a.startMin + a.totalMin;
+      var svcs = '';
+      for(var j=0;j<a.services.length;j++){
+        var s = a.services[j];
+        var e = S.empById(s.empId);
+        var priceTxt = (Number(s.price)>0) ? ' — '+S.fmtMoney(s.price, s.currency||'NIS') : '';
+        svcs += '<div class="svc">' +
+          S.esc(S.fmtHM(s.startMin))+'–'+S.esc(S.fmtHM(s.startMin+s.durationMin))+' · '+
+          S.esc(s.name)+(s.bodyPart?' ('+S.esc(s.bodyPart)+')':'')+
+          ' — <span dir="rtl">'+S.esc(e?e.nameAr:'?')+'</span>'+
+          S.esc(priceTxt) +
+        '</div>';
+      }
+      html += '<div class="printRow">' +
+        '<div class="time">'+S.esc(S.fmtHM(start))+' – '+S.esc(S.fmtHM(end))+'</div>' +
+        '<div class="ar">'+S.esc(cname)+' &nbsp; '+S.esc(phone)+'</div>' +
+        svcs +
+        (a.notes ? '<div class="svc"><i>Notes: '+S.esc(a.notes)+'</i></div>' : '') +
+      '</div>';
+
+      /* unpaid by employee */
+      var svcList = a.services || [];
+      var totalsPerCur = {};
+      for(var si=0; si<svcList.length; si++){
+        var sc = svcList[si].currency || 'NIS';
+        if(totalsPerCur[sc] == null) totalsPerCur[sc] = 0;
+        totalsPerCur[sc] += Number(svcList[si].price)||0;
+      }
+      var paidPerCur = {};
+      if(a.paid && typeof a.paid === 'object'){
+        for(var pk in a.paid){
+          if(!Object.prototype.hasOwnProperty.call(a.paid,pk)) continue;
+          paidPerCur[pk] = Number(a.paid[pk])||0;
+        }
+      }
+      for(var sj=0; sj<svcList.length; sj++){
+        var s2 = svcList[sj];
+        var cur2 = s2.currency || 'NIS';
+        var svcPrice = Number(s2.price)||0;
+        var curTotal = totalsPerCur[cur2]||0;
+        var curPaid = paidPerCur[cur2]||0;
+        var share = (curTotal > 0) ? (svcPrice / curTotal) : 0;
+        var paidShare = curPaid * share;
+        var unpaidShare = svcPrice - paidShare;
+        if(unpaidShare <= 0.001) continue;
+        if(!unpaidByEmp[s2.empId]) unpaidByEmp[s2.empId] = {};
+        if(!unpaidByEmp[s2.empId][cur2]) unpaidByEmp[s2.empId][cur2] = 0;
+        unpaidByEmp[s2.empId][cur2] += unpaidShare;
+      }
+    }
+
+    var totals = {}, paids = {};
+    for(var ci=0;ci<curs.length;ci++){ totals[curs[ci].code]=0; paids[curs[ci].code]=0; }
+    for(var k=0;k<appts.length;k++){
+      var pt = S.apptPaymentTotals(appts[k]);
+      for(var ck in pt.totals){
+        if(!Object.prototype.hasOwnProperty.call(pt.totals,ck)) continue;
+        if(totals[ck] == null) totals[ck]=0;
+        if(paids[ck] == null) paids[ck]=0;
+        totals[ck] += pt.totals[ck]||0;
+        paids[ck] += pt.paid[ck]||0;
+      }
+    }
+    var totHtml = '';
+    for(var m=0;m<curs.length;m++){
+      var cur = curs[m];
+      var t = totals[cur.code]||0, p = paids[cur.code]||0;
+      if(t===0 && p===0) continue;
+      totHtml += '<div>'+cur.code+' total: '+S.fmtMoney(t,cur.code)+(p>0?' (paid '+S.fmtMoney(p,cur.code)+')':'')+'</div>';
+    }
+    if(totHtml) html += '<div class="printTotals">'+totHtml+'</div>';
+
+    var empIds = Object.keys(unpaidByEmp);
+    if(empIds.length){
+      var unpaidHtml = '';
+      for(var ei=0; ei<empIds.length; ei++){
+        var empId = empIds[ei];
+        var emp = S.empById(empId);
+        var empName = emp ? emp.nameAr : '?';
+        var curs2 = unpaidByEmp[empId];
+        var parts = [];
+        for(var cix=0; cix<curs.length; cix++){
+          var ccode = curs[cix].code;
+          if(!curs2[ccode] || curs2[ccode] <= 0.001) continue;
+          parts.push(S.fmtMoney(curs2[ccode], ccode));
+        }
+        if(!parts.length) continue;
+        unpaidHtml += '<div><span dir="rtl" style="font-weight:700">'+S.esc(empName)+'</span>: '+
+          S.esc(parts.join(' · '))+'</div>';
+      }
+      if(unpaidHtml){
+        html += '<div class="printTotals" style="border-top:1px dashed #666;margin-top:14px">' +
+          '<div style="font-weight:700">Unpaid by employee</div>' +
+          unpaidHtml +
+        '</div>';
+      }
+    }
+  }
+  html += '</div>';
+  var area = document.getElementById('printArea');
+  area.innerHTML = html;
+  area.classList.remove('hidden');
+  setTimeout(function(){
+    window.print();
+    setTimeout(function(){ area.classList.add('hidden'); area.innerHTML=''; }, 300);
+  }, 50);
+}
+document.getElementById('btnPrintDate').onclick = function(){
+  var d = document.getElementById('printDate').value;
+  if(!d){ S.toast('Pick a date'); return; }
+  printDaySheet(d);
+};
+
+/* ============================================================
+   BACKUP / RESTORE / RESET
+   ============================================================ */
+document.getElementById('btnBackup').onclick = function(){
+  downloadBlob(JSON.stringify(DB(), null, 2), 'salon_backup_'+S.todayYmd()+'.json', 'application/json');
+};
+document.getElementById('btnRestore').onclick = function(){ document.getElementById('restoreFile').click(); };
+document.getElementById('restoreFile').onchange = function(e){
+  var f = e.target.files[0];
+  if(!f) return;
+  var r = new FileReader();
+  r.onload = function(){
+    try{
+      var d = JSON.parse(r.result);
+      S.confirmDialog('Replace all current data with this backup?', function(){
+        window.__salon.DB = d;
+        localStorage.setItem(S.STORE_KEY, JSON.stringify(d));
+        location.reload();
+      });
+    }catch(err){ S.toast('Invalid file: '+err.message); }
+  };
+  r.readAsText(f);
+};
+document.getElementById('btnReset').onclick = function(){
+  S.confirmDialog('Erase ALL data and start over? This cannot be undone.', function(){
+    localStorage.removeItem(S.STORE_KEY);
+    location.reload();
+  });
+};
+
+/* Expose renderers so Part 2 can call them */
+window.renderDay = renderDay;
+window.renderClients = renderClientsReal;
+window.renderReports = renderReportsReal;
+
+/* Initial paint */
+renderDay();
+})();
+</script>
+
+</body>
+</html>
