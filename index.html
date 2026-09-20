@@ -722,13 +722,31 @@ function loadDB(){
       if(sv.defaultPrice == null) sv.defaultPrice = 0;
       if(!sv.currency) sv.currency = 'NIS';
     }
-    /* Migrate employees */
+        /* Migrate employees */
     for(var j=0;j<d.employees.length;j++){
       var e = d.employees[j];
       if(e.baseSalary == null) e.baseSalary = 0;
       if(!e.salaryCurrency) e.salaryCurrency = 'NIS';
       if(e.commissionPct == null) e.commissionPct = 0;
       if(e.notes == null) e.notes = '';
+    }
+    /* Migrate appointment payments: old { NIS: 100 } → new { NIS: {amount:100, method:'cash'} } */
+    for(var ai=0; ai<d.appointments.length; ai++){
+      var ap = d.appointments[ai];
+      if(ap.paid && typeof ap.paid === 'object'){
+        var newPaid = {};
+        for(var pk in ap.paid){
+          if(!Object.prototype.hasOwnProperty.call(ap.paid,pk)) continue;
+          var pv = ap.paid[pk];
+          if(pv && typeof pv === 'object' && ('amount' in pv)){
+            /* already new format */
+            newPaid[pk] = { amount: Number(pv.amount)||0, method: pv.method || 'cash' };
+          } else {
+            newPaid[pk] = { amount: Number(pv)||0, method: 'cash' };
+          }
+        }
+        ap.paid = newPaid;
+      }
     }
     return d;
   }catch(e){
@@ -819,9 +837,16 @@ function empFreeForRange(empId, dateYmd, startMin, endMin, excludeApptId){
   return true;
 }
 
-/* Payment totals per appointment */
+/* Payment totals per appointment.
+   Returns:
+     totals: { NIS: 100, JD: 30 }
+     paid:   { NIS: 100, JD: 30 }         ← total paid per currency
+     paidCash: { NIS: 60, ... }
+     paidCard: { NIS: 40, ... }
+     status: 'unpaid' | 'partial' | 'paid'
+*/
 function apptPaymentTotals(a){
-  var totals = {}, paid = {};
+  var totals = {}, paid = {}, paidCash = {}, paidCard = {};
   var svcs = a.services || [];
   for(var i=0;i<svcs.length;i++){
     var s = svcs[i];
@@ -832,8 +857,25 @@ function apptPaymentTotals(a){
   if(a.paid && typeof a.paid === 'object'){
     for(var k in a.paid){
       if(!Object.prototype.hasOwnProperty.call(a.paid,k)) continue;
+      var entry = a.paid[k];
+      var amt = 0, method = 'cash';
+      if(entry && typeof entry === 'object'){
+        amt = Number(entry.amount)||0;
+        method = entry.method || 'cash';
+      } else {
+        /* legacy format safety */
+        amt = Number(entry)||0;
+        method = 'cash';
+      }
       if(paid[k] == null) paid[k] = 0;
-      paid[k] += Number(a.paid[k])||0;
+      paid[k] += amt;
+      if(method === 'card'){
+        if(paidCard[k] == null) paidCard[k] = 0;
+        paidCard[k] += amt;
+      } else {
+        if(paidCash[k] == null) paidCash[k] = 0;
+        paidCash[k] += amt;
+      }
     }
   }
   var hasTotal = false, fullyPaid = true, anyPaid = false;
@@ -851,21 +893,32 @@ function apptPaymentTotals(a){
     if(fullyPaid && anyPaid) status = 'paid';
     else if(anyPaid) status = 'partial';
   }
-  return { totals:totals, paid:paid, status:status };
+  return { totals:totals, paid:paid, paidCash:paidCash, paidCard:paidCard, status:status };
 }
 
-function totalsBarHtml(tObj, pObj, label){
+function totalsBarHtml(tObj, pObj, label, cashObj, cardObj){
   var html = '';
   var curs = activeCurrencies();
   for(var i=0;i<curs.length;i++){
     var c = curs[i];
     var t = tObj[c.code]||0;
     var p = pObj[c.code]||0;
+    var cash = (cashObj && cashObj[c.code]) ? cashObj[c.code] : 0;
+    var card = (cardObj && cardObj[c.code]) ? cardObj[c.code] : 0;
     if(t===0 && p===0) continue;
+    var detail = '';
+    if(p > 0){
+      if(cash > 0 && card > 0){
+        detail = ' <span class="lbl">(paid '+fmtMoney(p,c.code)+' — cash '+fmtMoney(cash,c.code)+' / card '+fmtMoney(card,c.code)+')</span>';
+      } else if(card > 0){
+        detail = ' <span class="lbl">(paid '+fmtMoney(p,c.code)+' — card)</span>';
+      } else {
+        detail = ' <span class="lbl">(paid '+fmtMoney(p,c.code)+' — cash)</span>';
+      }
+    }
     html += '<div class="t money">' +
       '<span class="lbl">'+(label||'')+' '+c.code+':</span> ' +
-      fmtMoney(t, c.code) +
-      (p>0 ? ' <span class="lbl">(paid '+fmtMoney(p,c.code)+')</span>' : '') +
+      fmtMoney(t, c.code) + detail +
     '</div>';
   }
   if(!html) html = '<div class="muted small">No amounts recorded</div>';
@@ -1664,13 +1717,15 @@ function monthLabel(y, m){
 
 function computeMonthReport(y, m){
   var range = monthRange(y, m);
-  var result = {
+    var result = {
     range: range,
     revenue: {},
     byEmployee: {},
     expenses: {},
     apptCount: 0,
-    unpaidByEmployee: {}
+    unpaidByEmployee: {},
+    paidCash: {},
+    paidCard: {}
   };
   var curs = activeCurrencies();
   for(var ci=0;ci<curs.length;ci++){
@@ -1688,11 +1743,15 @@ function computeMonthReport(y, m){
   for(var ai=0; ai<appts.length; ai++){
     var ap = appts[ai];
     var pt = apptPaymentTotals(ap);
-    for(var cur in pt.totals){
+        for(var cur in pt.totals){
       if(!Object.prototype.hasOwnProperty.call(pt.totals,cur)) continue;
       if(!result.revenue[cur]) result.revenue[cur] = {total:0,paid:0};
       result.revenue[cur].total += pt.totals[cur]||0;
       result.revenue[cur].paid  += pt.paid[cur]||0;
+      if(!result.paidCash[cur]) result.paidCash[cur] = 0;
+      if(!result.paidCard[cur]) result.paidCard[cur] = 0;
+      result.paidCash[cur] += pt.paidCash[cur]||0;
+      result.paidCard[cur] += pt.paidCard[cur]||0;
     }
 
     var svcs = ap.services || [];
@@ -1783,14 +1842,26 @@ function renderMonthly(){
   html += '<div class="card">';
   html += '<h2 style="margin-top:0">Revenue</h2>';
   html += '<div class="small muted">'+rep.apptCount+' appointment(s) in this month</div>';
-  var revHtml = '';
+    var revHtml = '';
   for(var i=0;i<curs.length;i++){
     var c = curs[i];
     var r = rep.revenue[c.code] || {total:0,paid:0};
     if(r.total === 0 && r.paid === 0) continue;
     var outstanding = r.total - r.paid;
+    var cashM = rep.paidCash[c.code]||0;
+    var cardM = rep.paidCard[c.code]||0;
+    var payDetail = '';
+    if(r.paid > 0){
+      if(cashM > 0 && cardM > 0){
+        payDetail = ' (cash ' + fmtMoney(cashM, c.code) + ' / card ' + fmtMoney(cardM, c.code) + ')';
+      } else if(cardM > 0){
+        payDetail = ' (card)';
+      } else {
+        payDetail = ' (cash)';
+      }
+    }
     revHtml += '<div style="margin:4px 0"><b>'+c.code+':</b> ' + fmtMoney(r.total, c.code) +
-      ' total · ' + fmtMoney(r.paid, c.code) + ' paid' +
+      ' total · ' + fmtMoney(r.paid, c.code) + ' paid' + payDetail +
       (outstanding > 0 ? ' · <span style="color:#c62828">' + fmtMoney(outstanding, c.code) + ' outstanding</span>' : '') +
       '</div>';
   }
@@ -2134,23 +2205,29 @@ function renderDay(){
   }
 
   /* Day totals */
-  var totals = {};
-  var paids  = {};
+  var totals = {}, paids = {}, cashT = {}, cardT = {};
   var curs = S.activeCurrencies();
-  for(var ci=0;ci<curs.length;ci++){ totals[curs[ci].code]=0; paids[curs[ci].code]=0; }
+  for(var ci=0;ci<curs.length;ci++){
+    var code = curs[ci].code;
+    totals[code]=0; paids[code]=0; cashT[code]=0; cardT[code]=0;
+  }
   for(var ai3=0; ai3<appts.length; ai3++){
     var pt = S.apptPaymentTotals(appts[ai3]);
     for(var k in pt.totals){
       if(!Object.prototype.hasOwnProperty.call(pt.totals,k)) continue;
       if(totals[k] == null) totals[k]=0;
       if(paids[k] == null) paids[k]=0;
+      if(cashT[k] == null) cashT[k]=0;
+      if(cardT[k] == null) cardT[k]=0;
       totals[k] += pt.totals[k]||0;
       paids[k]  += pt.paid[k]||0;
+      cashT[k]  += pt.paidCash[k]||0;
+      cardT[k]  += pt.paidCard[k]||0;
     }
   }
   document.getElementById('dayTotals').innerHTML =
     '<span class="lbl" style="font-weight:400;font-size:12px">DAY TOTALS</span> ' +
-    S.totalsBarHtml(totals, paids);
+    S.totalsBarHtml(totals, paids, '', cashT, cardT);
 }
 
 document.getElementById('prevDay').onclick = function(){
@@ -2454,10 +2531,21 @@ function openApptActions(apptId){
     var cur = curs[k2];
     var tt = pay.totals[cur.code]||0;
     var pp = pay.paid[cur.code]||0;
+    var pcash = pay.paidCash[cur.code]||0;
+    var pcard = pay.paidCard[cur.code]||0;
     if(tt===0 && pp===0) continue;
+    var detail = '';
+    if(pp > 0){
+      if(pcash > 0 && pcard > 0){
+        detail = ' <span class="lbl">(paid '+S.fmtMoney(pp,cur.code)+' — cash '+S.fmtMoney(pcash,cur.code)+' / card '+S.fmtMoney(pcard,cur.code)+')</span>';
+      } else if(pcard > 0){
+        detail = ' <span class="lbl">(paid '+S.fmtMoney(pp,cur.code)+' — card)</span>';
+      } else {
+        detail = ' <span class="lbl">(paid '+S.fmtMoney(pp,cur.code)+' — cash)</span>';
+      }
+    }
     totalsHtml += '<div class="t money">' +
-      '<span class="lbl">'+cur.code+':</span> '+S.fmtMoney(tt, cur.code) +
-      (pp>0 ? ' <span class="lbl">(paid '+S.fmtMoney(pp,cur.code)+')</span>' : '') +
+      '<span class="lbl">'+cur.code+':</span> '+S.fmtMoney(tt, cur.code) + detail +
     '</div>';
   }
   if(!totalsHtml) totalsHtml = '<div class="muted small">No amounts recorded</div>';
@@ -2566,17 +2654,32 @@ function paymentSheet(a, onSaved){
     var t = pay.totals[cur.code]||0;
     if(t <= 0) continue;
     anyRow = true;
-    var currentPaid = (a.paid && a.paid[cur.code]) ? a.paid[cur.code] : 0;
-    rows += '<label>'+cur.label+' — total '+S.fmtMoney(t, cur.code)+'</label>' +
-      '<input class="payInput" data-cur="'+cur.code+'" type="number" min="0" step="0.01" ' +
-        'value="'+(currentPaid||'')+'" placeholder="0">';
+    var existing = (a.paid && a.paid[cur.code]) ? a.paid[cur.code] : null;
+    var curAmt = 0, curMethod = 'cash';
+    if(existing && typeof existing === 'object'){
+      curAmt = Number(existing.amount)||0;
+      curMethod = existing.method || 'cash';
+    } else if(existing != null){
+      curAmt = Number(existing)||0;
+    }
+    rows += '<div style="margin-top:10px">' +
+      '<label>'+cur.label+' — total '+S.fmtMoney(t, cur.code)+'</label>' +
+      '<div class="row">' +
+        '<input class="payInput" data-cur="'+cur.code+'" type="number" min="0" step="0.01" ' +
+          'value="'+(curAmt||'')+'" placeholder="0" style="flex:2">' +
+        '<select class="payMethod" data-cur="'+cur.code+'" style="flex:1">' +
+          '<option value="cash"'+(curMethod==='cash'?' selected':'')+'>Cash</option>' +
+          '<option value="card"'+(curMethod==='card'?' selected':'')+'>Card</option>' +
+        '</select>' +
+      '</div>' +
+    '</div>';
   }
   if(!anyRow){
     rows = '<div class="small muted">No prices recorded on this appointment. Add prices in the booking first.</div>';
   }
   var html =
     '<h2>Mark as Paid</h2>' +
-    '<div class="small muted">Enter the amount received in each currency. Leave blank or 0 for none.</div>' +
+    '<div class="small muted">Enter the amount received in each currency and choose Cash or Card.</div>' +
     rows +
     '<div class="row" style="margin-top:14px">' +
       '<button class="grow" id="payCancel">Cancel</button>' +
@@ -2589,9 +2692,17 @@ function paymentSheet(a, onSaved){
     saveBtn.onclick = function(){
       var paidMap = {};
       var inputs = document.querySelectorAll('.payInput');
+      var methods = document.querySelectorAll('.payMethod');
+      var methodByCur = {};
+      for(var m=0;m<methods.length;m++){
+        methodByCur[methods[m].dataset.cur] = methods[m].value;
+      }
       for(var i=0;i<inputs.length;i++){
         var v = Number(inputs[i].value)||0;
-        if(v > 0) paidMap[inputs[i].dataset.cur] = v;
+        var cur = inputs[i].dataset.cur;
+        if(v > 0){
+          paidMap[cur] = { amount: v, method: methodByCur[cur] || 'cash' };
+        }
       }
       if(Object.keys(paidMap).length === 0){
         S.toast('Enter at least one amount');
@@ -2863,15 +2974,17 @@ function downloadBlob(text, fname, mime){
 
 function buildDayCsv(dateYmd){
   var appts = S.apptsOnDate(dateYmd);
-  var header = ['Date','Start','End','Client','Phone','Service','Body Part','Employee',
-                'Duration Min','Price','Currency','Paid','Paid At','Notes'];
+    var header = ['Date','Start','End','Client','Phone','Service','Body Part','Employee',
+                'Duration Min','Price','Currency','Cash Paid','Card Paid','Total Paid','Paid At','Notes'];
   var rows = [];
   rows.push(header.map(csvCell).join(','));
 
-  var totals = {};
-  var paids  = {};
+    var totals = {}, paids = {}, cashT = {}, cardT = {};
   var curs = S.activeCurrencies();
-  for(var ci=0;ci<curs.length;ci++){ totals[curs[ci].code]=0; paids[curs[ci].code]=0; }
+  for(var ci=0;ci<curs.length;ci++){
+    var code0 = curs[ci].code;
+    totals[code0]=0; paids[code0]=0; cashT[code0]=0; cardT[code0]=0;
+  }
 
   var unpaidByEmp = {};
 
@@ -2885,8 +2998,12 @@ function buildDayCsv(dateYmd){
       if(!Object.prototype.hasOwnProperty.call(pt.totals,k)) continue;
       if(totals[k] == null) totals[k]=0;
       if(paids[k] == null) paids[k]=0;
+      if(cashT[k] == null) cashT[k]=0;
+      if(cardT[k] == null) cardT[k]=0;
       totals[k] += pt.totals[k]||0;
       paids[k]  += pt.paid[k]||0;
+      cashT[k]  += pt.paidCash[k]||0;
+      cardT[k]  += pt.paidCard[k]||0;
     }
 
     var svcs = a.services || [];
@@ -2921,7 +3038,23 @@ function buildDayCsv(dateYmd){
     for(var j=0;j<a.services.length;j++){
       var s = a.services[j];
       var e = S.empById(s.empId);
-      var paidAmt = (a.paid && a.paid[s.currency||'NIS']) ? a.paid[s.currency||'NIS'] : '';
+            /* Per-service pro-rata share of cash/card for this currency */
+      var curCode = s.currency || 'NIS';
+      var entry = (a.paid && a.paid[curCode]) ? a.paid[curCode] : null;
+      var cashAmt = '';
+      var cardAmt = '';
+      var totalAmt = '';
+      if(entry){
+        var thisAmt = (entry && typeof entry === 'object') ? Number(entry.amount)||0 : Number(entry)||0;
+        var thisMethod = (entry && typeof entry === 'object') ? (entry.method || 'cash') : 'cash';
+        /* pro-rata by service price within this appointment+currency */
+        var svcPrice0 = Number(s.price)||0;
+        var curTot0 = totalsPerCur[curCode]||0;
+        var share0 = (curTot0 > 0) ? (svcPrice0 / curTot0) : 0;
+        var paidShare0 = thisAmt * share0;
+        if(thisMethod === 'card'){ cardAmt = paidShare0; totalAmt = paidShare0; }
+        else { cashAmt = paidShare0; totalAmt = paidShare0; }
+      }
       rows.push([
         a.date,
         S.fmtHM(s.startMin),
@@ -2931,27 +3064,28 @@ function buildDayCsv(dateYmd){
         e ? e.nameAr : '',
         s.durationMin,
         (s.price!=null ? s.price : ''),
-        (s.currency||'NIS'),
-        paidAmt,
+        curCode,
+        cashAmt, cardAmt, totalAmt,
         (a.paidAt ? S.fmtDateTimeShort(a.paidAt) : ''),
         a.notes||''
       ].map(csvCell).join(','));
     }
   }
 
-  rows.push('');
+    rows.push('');
   rows.push('"DAY TOTALS — ' + dateYmd + '"');
   for(var m=0;m<curs.length;m++){
     var cur = curs[m];
     var t = totals[cur.code]||0;
     var p = paids[cur.code]||0;
+    var cashDay = cashT[cur.code]||0;
+    var cardDay = cardT[cur.code]||0;
     if(t===0 && p===0) continue;
-    rows.push([ '', '', '', '', '', '', '', '', '', '', cur.code, 'Total', '', '' ]
-      .map(csvCell).join(',').replace(/,,+$/, '') + ',' + csvCell(t));
-    rows.push([ '', '', '', '', '', '', '', '', '', '', cur.code, 'Paid', '', '' ]
-      .map(csvCell).join(',').replace(/,,+$/, '') + ',' + csvCell(p));
-    rows.push([ '', '', '', '', '', '', '', '', '', '', cur.code, 'Outstanding', '', '' ]
-      .map(csvCell).join(',').replace(/,,+$/, '') + ',' + csvCell(t - p));
+    rows.push([cur.code, 'Total', '', t].map(csvCell).join(','));
+    rows.push([cur.code, 'Paid', '', p].map(csvCell).join(','));
+    rows.push([cur.code, 'Paid Cash', '', cashDay].map(csvCell).join(','));
+    rows.push([cur.code, 'Paid Card', '', cardDay].map(csvCell).join(','));
+    rows.push([cur.code, 'Outstanding', '', t - p].map(csvCell).join(','));
   }
 
   var empIds = Object.keys(unpaidByEmp);
@@ -3322,24 +3456,43 @@ function printDaySheet(dateYmd){
       }
     }
 
-    var totals = {}, paids = {};
-    for(var ci=0;ci<curs.length;ci++){ totals[curs[ci].code]=0; paids[curs[ci].code]=0; }
+        var totals = {}, paids = {}, cashT = {}, cardT = {};
+    for(var ci=0;ci<curs.length;ci++){
+      var codeI = curs[ci].code;
+      totals[codeI]=0; paids[codeI]=0; cashT[codeI]=0; cardT[codeI]=0;
+    }
     for(var k=0;k<appts.length;k++){
       var pt = S.apptPaymentTotals(appts[k]);
       for(var ck in pt.totals){
         if(!Object.prototype.hasOwnProperty.call(pt.totals,ck)) continue;
         if(totals[ck] == null) totals[ck]=0;
         if(paids[ck] == null) paids[ck]=0;
+        if(cashT[ck] == null) cashT[ck]=0;
+        if(cardT[ck] == null) cardT[ck]=0;
         totals[ck] += pt.totals[ck]||0;
         paids[ck] += pt.paid[ck]||0;
+        cashT[ck] += pt.paidCash[ck]||0;
+        cardT[ck] += pt.paidCard[ck]||0;
       }
     }
-    var totHtml = '';
+        var totHtml = '';
     for(var m=0;m<curs.length;m++){
       var cur = curs[m];
       var t = totals[cur.code]||0, p = paids[cur.code]||0;
+      var cashP = cashT[cur.code]||0;
+      var cardP = cardT[cur.code]||0;
       if(t===0 && p===0) continue;
-      totHtml += '<div>'+cur.code+' total: '+S.fmtMoney(t,cur.code)+(p>0?' (paid '+S.fmtMoney(p,cur.code)+')':'')+'</div>';
+      var detail = '';
+      if(p > 0){
+        if(cashP > 0 && cardP > 0){
+          detail = ' (paid '+S.fmtMoney(p,cur.code)+' — cash '+S.fmtMoney(cashP,cur.code)+' / card '+S.fmtMoney(cardP,cur.code)+')';
+        } else if(cardP > 0){
+          detail = ' (paid '+S.fmtMoney(p,cur.code)+' — card)';
+        } else {
+          detail = ' (paid '+S.fmtMoney(p,cur.code)+' — cash)';
+        }
+      }
+      totHtml += '<div>'+cur.code+' total: '+S.fmtMoney(t,cur.code)+detail+'</div>';
     }
     if(totHtml) html += '<div class="printTotals">'+totHtml+'</div>';
 
