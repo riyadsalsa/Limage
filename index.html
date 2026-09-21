@@ -432,7 +432,7 @@
 
   </section>
 
-  <section class="tab" id="tab-help">
+    <section class="tab" id="tab-help">
     <div class="card">
       <h2>🧙 Setup wizard (first run)</h2>
       <p class="small">
@@ -479,7 +479,7 @@
       <ol class="help">
         <li>Tap the appointment on the day grid</li>
         <li>Tap <b>💰 Mark as Paid</b></li>
-        <li>Enter amount received in each currency</li>
+        <li>Enter the amount in each currency, then choose <b>Cash</b> or <b>Card</b> for each</li>
         <li>Save — the block turns green with ✓</li>
       </ol>
       <p class="small muted">Partial payments are OK. Tap again to update or clear.</p>
@@ -495,15 +495,149 @@
       </ol>
     </div>
 
-    <div class="card">
-      <h2>End of day (do this every day)</h2>
+    <div class="card" style="border-color:#2e7d32">
+      <h2 style="color:#2e7d32">📅 Daily rhythm — do this every day</h2>
+      <p class="small">Before you close the salon, do these <b>three</b> things:</p>
       <ol class="help">
-        <li><b>Reports → Export day CSV</b> — pick today → downloads a .csv</li>
-        <li>Open it in Numbers / Excel — or print it</li>
-        <li>File it, keep it</li>
-        <li><b>Reports → Download JSON backup</b> — save to iCloud Drive or email to yourself</li>
+        <li>
+          <b>🖨 Print the day sheet</b><br>
+          Reports → <b>Print day sheet</b> → date = today → Print.<br>
+          <span class="muted">Paper record: every appointment, client, service, payment (cash / card split), day totals.</span>
+        </li>
+        <li>
+          <b>📄 Export the day CSV</b><br>
+          Reports → <b>Export day CSV</b> → date = today → <b>Export day CSV</b>.<br>
+          <span class="muted">Downloads <code>salon_day_YYYY-MM-DD.csv</code> to your iPhone's Files app.</span>
+        </li>
+        <li>
+          <b>💾 Download the JSON backup</b> — <i>the most important step</i><br>
+          Reports → <b>⬇ Download JSON backup</b>.<br>
+          <span class="muted">Downloads <code>salon_backup_YYYY-MM-DD.json</code>. This is the <b>only</b> file that can fully restore your data if the phone dies.</span>
+        </li>
       </ol>
-      <p class="small muted">The CSV is your readable daily record. The JSON is the safety net if the phone ever dies.</p>
+      <p class="small"><b>Where to store these files (pick at least two):</b></p>
+      <ul class="help">
+        <li><b>iCloud Drive</b> — in Files, long-press each file → <b>Move</b> → iCloud Drive folder (e.g. <code>Salon Backups</code>)</li>
+        <li><b>Email to yourself</b> — long-press → <b>Share</b> → Mail</li>
+        <li><b>AirDrop</b> to a Mac or iPad</li>
+        <li><b>Google Drive / Dropbox</b> — Files → Share → pick the app</li>
+      </ul>
+    </div>
+
+    <div class="card" style="border-color:#1565c0">
+      <h2 style="color:#1565c0">📆 Weekly rhythm — once a week</h2>
+      <ol class="help">
+        <li>Open the app → <b>Reports → ⬇ Download JSON backup</b></li>
+        <li>Email it to yourself as a second safety copy</li>
+        <li>On the phone, delete older JSONs once they're saved in iCloud/email (keep only the latest 2–3 on the phone)</li>
+        <li>Move the week's daily CSVs into a dated folder in iCloud Drive (e.g. <code>Salon 2026-09 Week 3</code>)</li>
+      </ol>
+    </div>
+
+    <div class="card" style="border-color:#6a1b9a">
+      <h2 style="color:#6a1b9a">🗓️ Monthly rhythm — end of month</h2>
+      <ol class="help">
+        <li>
+          <b>Monthly tab</b> → make sure the right month shows (◀ ▶) → <b>🖨 Print month</b>.<br>
+          <span class="muted">Shows: total revenue, per-employee revenue + commission, payroll, expenses, net per currency.</span>
+        </li>
+        <li>
+          <b>📄 Export month CSV</b>.<br>
+          <span class="muted">Downloads <code>salon_month_YYYY-MM.csv</code> — a full monthly spreadsheet.</span>
+        </li>
+        <li>Save both files to iCloud Drive / email, same as daily</li>
+        <li>Download one final JSON backup for the month → email to yourself</li>
+        <li>File the printed monthly report in a physical folder (business records / tax)</li>
+      </ol>
+    </div>
+
+    <div class="card">
+      <h2>📦 What to keep and for how long</h2>
+      <table style="width:100%;border-collapse:collapse;font-size:13px">
+        <thead>
+          <tr style="background:#f0f2f5">
+            <th style="text-align:left;padding:6px;border:1px solid #d9dee3">File</th>
+            <th style="text-align:left;padding:6px;border:1px solid #d9dee3">Why</th>
+            <th style="text-align:left;padding:6px;border:1px solid #d9dee3">Keep?</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="padding:6px;border:1px solid #d9dee3"><b>JSON backup</b></td>
+            <td style="padding:6px;border:1px solid #d9dee3">Only way to fully restore if the phone dies</td>
+            <td style="padding:6px;border:1px solid #d9dee3"><b>Forever</b> (highest priority)</td>
+          </tr>
+          <tr>
+            <td style="padding:6px;border:1px solid #d9dee3"><b>Monthly CSV</b></td>
+            <td style="padding:6px;border:1px solid #d9dee3">Business records, taxes, review</td>
+            <td style="padding:6px;border:1px solid #d9dee3"><b>Forever</b></td>
+          </tr>
+          <tr>
+            <td style="padding:6px;border:1px solid #d9dee3"><b>Monthly printout</b></td>
+            <td style="padding:6px;border:1px solid #d9dee3">Physical record</td>
+            <td style="padding:6px;border:1px solid #d9dee3"><b>Forever</b></td>
+          </tr>
+          <tr>
+            <td style="padding:6px;border:1px solid #d9dee3"><b>Daily CSV</b></td>
+            <td style="padding:6px;border:1px solid #d9dee3">Daily detail</td>
+            <td style="padding:6px;border:1px solid #d9dee3">At least 1 year, then optional</td>
+          </tr>
+          <tr>
+            <td style="padding:6px;border:1px solid #d9dee3"><b>Daily printout</b></td>
+            <td style="padding:6px;border:1px solid #d9dee3">Paper trail for the day</td>
+            <td style="padding:6px;border:1px solid #d9dee3">At least 1 year, then optional</td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="small muted" style="margin-top:8px">
+        If you only save one thing: <b>the JSON backup</b>. Nothing else can restore your data.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>✅ Checks and balances</h2>
+      <p class="small">Every day, match what the app says against what's in the drawer and terminal:</p>
+      <ul class="help">
+        <li><b>Cash in the drawer</b> should match the <code>cash</code> amount on the day sheet.</li>
+        <li><b>Card terminal report</b> should match the <code>card</code> amount on the day sheet.</li>
+        <li><b>Sum of cash + card</b> should match the <code>paid</code> total for the day.</li>
+      </ul>
+      <p class="small">Monthly:</p>
+      <ul class="help">
+        <li><b>Monthly report revenue</b> should equal the sum of every day's totals for that month.</li>
+        <li><b>Monthly revenue − payroll − expenses</b> = the net per currency shown at the bottom.</li>
+        <li><b>Employee commissions</b> are computed only on <b>paid</b> amounts — a client who hasn't paid yet generates no commission.</li>
+      </ul>
+      <p class="small muted">
+        If numbers don't match, check the appointment's payment record (tap it on the day grid).
+        The app never guesses — whatever you recorded is what it shows.
+      </p>
+    </div>
+
+    <div class="card" style="border-color:#ef6c00">
+      <h2 style="color:#ef6c00">💾 Backup &amp; restore in full</h2>
+      <p class="small">
+        The JSON backup is a <b>complete copy of everything</b>: employees, services, clients,
+        appointments, payments, expenses, settings, closed days, and currencies.
+        Restoring it replaces the entire database on the phone.
+      </p>
+      <p class="small"><b>To back up:</b></p>
+      <ol class="help">
+        <li>Reports → <b>⬇ Download JSON backup</b></li>
+        <li>Save the file to iCloud Drive or email it to yourself</li>
+      </ol>
+      <p class="small"><b>To restore on a new phone (or after a reset):</b></p>
+      <ol class="help">
+        <li>Copy the app file (<code>salon4.html</code>) to the new phone — email it to yourself, AirDrop from a computer, or download from iCloud Drive</li>
+        <li>Open the file in Edge → <b>Add to Home Screen</b></li>
+        <li>Open the app → the wizard runs → complete it (it just needs a name, days, currencies, hours to get started)</li>
+        <li>Reports → <b>⬆ Restore from JSON</b> → pick your latest backup file</li>
+        <li>Confirm → the app reloads with <b>all your real data back</b> (the wizard setup is overwritten by the backup)</li>
+      </ol>
+      <p class="small muted">
+        <b>Important:</b> restoring replaces everything. Do not restore an old backup
+        over newer data unless you actually want to go back to that older state.
+      </p>
     </div>
 
     <div class="card">
@@ -540,26 +674,6 @@
       </ul>
     </div>
 
-    <div class="card" style="border-color:#c62828">
-      <h2 style="color:#c62828">⚠ Critical safety rules</h2>
-      <ol class="help">
-        <li><b>Never clear Edge's browsing data or cache</b> — it erases ALL salon data</li>
-        <li><b>Never delete this HTML file</b> from Files — that's the app</li>
-        <li><b>Back up the JSON at least once a week</b> — the only way to restore if the phone breaks</li>
-        <li>To move to a new phone: install the app there, then <b>Restore from JSON</b></li>
-      </ol>
-    </div>
-
-    <div class="card">
-      <h2>Restoring from a backup</h2>
-      <ol class="help">
-        <li>Open the app on the new or repaired phone</li>
-        <li><b>Reports → ⬆ Restore from JSON</b></li>
-        <li>Pick your latest backup file</li>
-        <li>Confirm — the app reloads with your data</li>
-      </ol>
-    </div>
-
     <div class="card">
       <h2>Currency notes</h2>
       <ul class="help">
@@ -572,17 +686,32 @@
       </ul>
     </div>
 
+    <div class="card" style="border-color:#c62828">
+      <h2 style="color:#c62828">⚠ Critical safety rules</h2>
+      <ol class="help">
+        <li><b>Never clear Edge's browsing data or cache</b> — it erases ALL salon data from the phone (Edge menu → Settings → Privacy, search, and services → Clear browsing data). Avoid this entirely.</li>
+        <li><b>Never delete the HTML file</b> from Files — that's the app itself.</li>
+        <li><b>Back up the JSON at least once a week</b> (daily is better) — the only way to restore if the phone breaks.</li>
+        <li><b>Never restore an old JSON</b> over newer data unless you intend to lose the newer data.</li>
+        <li>To move to a new phone: install the app there, then <b>Restore from JSON</b>.</li>
+      </ol>
+    </div>
+
     <div class="card">
       <h2>If something looks wrong</h2>
       <ul class="help">
-        <li>Red banner at top → screenshot it and send it for a fix</li>
-        <li>If the page ever looks blank → close and reopen the app</li>
-        <li>If a number is wrong → check the appointment's payment record; the app never guesses</li>
+        <li><b>Red banner at top</b> → screenshot it and send it for a fix. It tells us the exact line.</li>
+        <li><b>Page looks blank</b> → close and reopen the app</li>
+        <li><b>A number looks wrong</b> → check the appointment's payment record; the app never guesses</li>
+        <li><b>Data missing after Erase</b> → that's expected; Erase clears everything. Restore from your latest JSON to bring it back.</li>
       </ul>
     </div>
 
     <div class="card center">
-      <p class="small muted">Salon app — built for offline use on iPhone.<br>All data stays on this device.</p>
+      <p class="small muted">
+        Salon app — built for offline use on iPhone.<br>
+        All data stays on this device until you export it.
+      </p>
     </div>
   </section>
 
@@ -1762,11 +1891,18 @@ function computeMonthReport(y, m){
       if(totalsPerCur[c] == null) totalsPerCur[c] = 0;
       totalsPerCur[c] += Number(s.price)||0;
     }
-    var paidPerCur = {};
+        var paidPerCur = {};
     if(ap.paid && typeof ap.paid === 'object'){
       for(var pk in ap.paid){
         if(!Object.prototype.hasOwnProperty.call(ap.paid,pk)) continue;
-        paidPerCur[pk] = Number(ap.paid[pk])||0;
+        var entry = ap.paid[pk];
+        var v = 0;
+        if(entry && typeof entry === 'object'){
+          v = Number(entry.amount)||0;
+        } else {
+          v = Number(entry)||0;
+        }
+        paidPerCur[pk] = v;
       }
     }
     for(var sj=0; sj<svcs.length; sj++){
