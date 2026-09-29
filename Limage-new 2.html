@@ -210,6 +210,21 @@
     .printTotals{margin-top:14px;padding-top:10px;border-top:2px solid #000;
       font-size:14px;font-weight:700}
     .printTotals div{margin:3px 0}
+    /* --- Monthly + day print — Arabic font fallback so names don't show as "W" --- */
+    #printArea,
+    #printArea .printSheet,
+    #printArea .printHead,
+    #printArea .printRow,
+    #printArea .printTotals,
+    #printArea [dir="rtl"]{
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                   "Geeza Pro", "Baghdad", "Damascus", "Arabic Typesetting",
+                   "Arial", sans-serif;
+    }
+    #printArea [dir="rtl"]{ unicode-bidi: embed; }
+    #printArea .printSheet{ padding:10px }
+    #printArea .printHead{ font-size:16px; font-weight:700; margin-bottom:6px }
+    #printArea .printTotals div{ margin:2px 0 }
   }
 
   .empty{padding:24px 12px;text-align:center;color:var(--muted);font-size:14px}
@@ -480,23 +495,16 @@
 
   </section>
 
-      <section class="tab" id="tab-help">
+        <section class="tab" id="tab-help">
     <div class="card">
       <h2>🧙 Setup wizard (first run)</h2>
-      <p class="small">
-        The first time you open the app, a wizard runs and asks for:
-      </p>
       <ol class="help">
         <li><b>Salon name</b> — appears in the header bar</li>
         <li><b>Closed days</b> — tap the days your salon is closed each week (e.g. Sat + Mon). If you're open every day, tap none.</li>
         <li><b>Currencies</b> — pick which currencies you accept (NIS, JD, USD). At least one required.</li>
         <li><b>Business hours</b> — opening and closing time</li>
       </ol>
-      <p class="small muted">
-        You can re-run the wizard any time from <b>Reports → Re-run Setup Wizard</b>.
-        Changing currencies later does not erase existing prices — old prices in a
-        currency you disable remain visible in past appointments and reports.
-      </p>
+      <p class="small muted">Re-run any time from <b>Reports → Re-run Setup Wizard</b>.</p>
     </div>
 
     <div class="card">
@@ -504,7 +512,7 @@
       <ol class="help">
         <li><b>Staff tab</b> — add each employee: Arabic name, specialty, salary (NIS), commission %</li>
         <li><b>Services tab</b> — add each service and its default price + currency</li>
-        <li><b>Expenses tab → Categories</b> — the 8 defaults are loaded; edit or add as needed</li>
+        <li><b>Expenses → Categories</b> — edit the list as needed</li>
         <li>You're ready to take bookings</li>
       </ol>
     </div>
@@ -512,13 +520,12 @@
     <div class="card">
       <h2>Taking a booking (phone call)</h2>
       <ol class="help">
-        <li>Go to <b>Day</b> tab, pick the date</li>
+        <li>Day tab → pick the date</li>
         <li>Tap an empty slot on the grid</li>
         <li>Pick client (or <b>+ New</b>)</li>
         <li>Tap a service → pick employee → duration → price → <b>Add</b></li>
         <li>Add more services if needed</li>
-        <li>Set start time and total minutes</li>
-        <li>Save</li>
+        <li>Set start time and total minutes → Save</li>
       </ol>
     </div>
 
@@ -527,10 +534,14 @@
       <ol class="help">
         <li>Tap the appointment on the day grid</li>
         <li>Tap <b>💰 Mark as Paid</b></li>
-        <li>Enter the amount in each currency, then choose <b>Cash</b> or <b>Card</b> for each</li>
+        <li>The dialog shows one line for <b>each enabled currency</b></li>
+        <li>Enter the amount received in whichever currency the client paid with</li>
+        <li>Choose <b>Cash</b> or <b>Card</b> per currency</li>
+        <li>If the payment fully settles the bill (even if the currency differs from the bill), tick <b>"This fully settles the bill"</b></li>
         <li>Save — the block turns green with ✓</li>
       </ol>
       <p class="small muted">Partial payments are OK. Tap again to update or clear.</p>
+      <p class="small"><b>Currency notes:</b> Services have a default price in NIS, but clients can pay in any enabled currency. The "Fully settled" checkbox tells the app the payment is complete even if the currency differs from the billed currency.</p>
     </div>
 
     <div class="card">
@@ -544,7 +555,7 @@
         <li>If the target slot has a conflict → refused with a clear message</li>
         <li>To cancel → tap <b>Cancel</b> on the banner</li>
       </ol>
-      <p class="small muted">You can also move to a different day: tap <b>Cancel</b>, change the date, then tap <b>🕐 Move</b> again.</p>
+      <p class="small muted">You can also move to a different day: use the date bar (◀ ▶) while the banner is active.</p>
     </div>
 
     <div class="card">
@@ -569,7 +580,7 @@
       </ul>
       <p class="small"><b>What does NOT get copied:</b></p>
       <ul class="help">
-        <li><b>Payment</b> — the new appointment starts as <b>Unpaid</b>, because the client hasn't paid for that future visit yet</li>
+        <li><b>Payment</b> — the new appointment starts as <b>Unpaid</b></li>
         <li>The original appointment stays exactly where it was — nothing is moved or deleted</li>
       </ul>
     </div>
@@ -586,226 +597,90 @@
 
     <div class="card" style="border-color:#2e7d32">
       <h2 style="color:#2e7d32">📅 Daily rhythm — do this every day</h2>
-      <p class="small">Before you close the salon, do these <b>three</b> things:</p>
       <ol class="help">
         <li>
           <b>🖨 Print the day sheet</b><br>
-          <b>Reports → Print day sheet</b> → date = today → <b>Print</b>.<br>
-          <span class="muted">Shows: every appointment, client, service, payment (cash / card), day totals, and an <b>Unpaid by client</b> list at the bottom showing who still owes you money.</span>
+          Reports → Print day sheet → today → Print
         </li>
         <li>
           <b>📄 Export the day CSV</b><br>
-          <b>Reports → Export day CSV</b> → date = today → <b>Export day CSV</b>.<br>
-          <span class="muted">Downloads <code>salon_day_YYYY-MM-DD.csv</code> to your iPhone's Files app. Same content as the printout, plus a full <b>UNPAID BY CLIENT</b> breakdown with service lines.</span>
+          Reports → Export day CSV → today → save to iCloud
         </li>
         <li>
-          <b>💾 Download the JSON backup</b> — <i>the most important step</i><br>
-          <b>Reports → ⬇ Download JSON backup</b>.<br>
-          <span class="muted">Downloads <code>salon_backup_YYYY-MM-DD.json</code>. This is the <b>only</b> file that can fully restore your data if the phone dies.</span>
+          <b>💾 Download the JSON backup</b> — most important<br>
+          Reports → ⬇ Download JSON backup → save to iCloud
         </li>
       </ol>
-      <p class="small"><b>Where to store these files (do at least two):</b></p>
+      <p class="small"><b>Where to store files:</b></p>
       <ul class="help">
-        <li><b>iCloud Drive</b> — in Files, long-press each file → <b>Move</b> → iCloud Drive folder (create one called <code>Salon Backups</code>)</li>
-        <li><b>Email to yourself</b> — long-press the file → <b>Share</b> → Mail</li>
-        <li><b>AirDrop</b> to a Mac or iPad</li>
-        <li><b>Google Drive / Dropbox</b> — Files → Share → pick the app</li>
+        <li><b>iCloud Drive</b> — Files → Move to <code>Salon Backups</code></li>
+        <li><b>Email to yourself</b> — Share → Mail</li>
+        <li><b>AirDrop</b> to a Mac</li>
       </ul>
-    </div>
-
-    <div class="card" style="border-color:#1565c0">
-      <h2 style="color:#1565c0">📆 Weekly rhythm — once a week</h2>
-      <ol class="help">
-        <li>Open the app → <b>Reports → ⬇ Download JSON backup</b></li>
-        <li>Email it to yourself as a second safety copy</li>
-        <li>On the phone, delete older JSONs once they're saved in iCloud/email (keep only the latest 2–3 on the phone)</li>
-        <li>Move the week's daily CSVs into a dated folder in iCloud Drive (e.g. <code>Salon 2026-09 Week 3</code>)</li>
-      </ol>
     </div>
 
     <div class="card" style="border-color:#6a1b9a">
       <h2 style="color:#6a1b9a">🗓️ Monthly rhythm — end of month</h2>
       <ol class="help">
-        <li>
-          <b>Monthly tab</b> → make sure the right month shows (◀ ▶) → <b>🖨 Print month</b>.<br>
-          <span class="muted">Shows: total revenue, per-employee revenue + commission, payroll (base + commission on <b>billed</b>), expenses, <b>unpaid by client</b>, and net per currency.</span>
-        </li>
-        <li>
-          <b>📄 Export month CSV</b>.<br>
-          <span class="muted">Downloads <code>salon_month_YYYY-MM.csv</code> — a full monthly spreadsheet with every section, including the <code>UNPAID BY CLIENT</code> detail.</span>
-        </li>
-        <li>Save both files to iCloud Drive / email, same as daily</li>
-        <li>Download one final JSON backup for the month → email to yourself</li>
-        <li>File the printed monthly report in a physical folder (business records / tax)</li>
+        <li>Monthly tab → correct month → <b>🖨 Print month</b></li>
+        <li><b>📄 Export month CSV</b></li>
+        <li>Save both to iCloud / email</li>
+        <li>Download final JSON backup for the month → email</li>
+        <li>File the printed report physically</li>
       </ol>
-    </div>
-
-    <div class="card">
-      <h2>📦 What to keep and for how long</h2>
-      <table style="width:100%;border-collapse:collapse;font-size:13px">
-        <thead>
-          <tr style="background:#f0f2f5">
-            <th style="text-align:left;padding:6px;border:1px solid #d9dee3">File</th>
-            <th style="text-align:left;padding:6px;border:1px solid #d9dee3">Why</th>
-            <th style="text-align:left;padding:6px;border:1px solid #d9dee3">Keep?</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td style="padding:6px;border:1px solid #d9dee3"><b>JSON backup</b></td>
-            <td style="padding:6px;border:1px solid #d9dee3">Only way to fully restore if the phone dies</td>
-            <td style="padding:6px;border:1px solid #d9dee3"><b>Forever</b> (highest priority)</td>
-          </tr>
-          <tr>
-            <td style="padding:6px;border:1px solid #d9dee3"><b>Monthly CSV</b></td>
-            <td style="padding:6px;border:1px solid #d9dee3">Business records, taxes, review</td>
-            <td style="padding:6px;border:1px solid #d9dee3"><b>Forever</b></td>
-          </tr>
-          <tr>
-            <td style="padding:6px;border:1px solid #d9dee3"><b>Monthly printout</b></td>
-            <td style="padding:6px;border:1px solid #d9dee3">Physical record</td>
-            <td style="padding:6px;border:1px solid #d9dee3"><b>Forever</b></td>
-          </tr>
-          <tr>
-            <td style="padding:6px;border:1px solid #d9dee3"><b>Daily CSV</b></td>
-            <td style="padding:6px;border:1px solid #d9dee3">Daily detail</td>
-            <td style="padding:6px;border:1px solid #d9dee3">At least 1 year, then optional</td>
-          </tr>
-          <tr>
-            <td style="padding:6px;border:1px solid #d9dee3"><b>Daily printout</b></td>
-            <td style="padding:6px;border:1px solid #d9dee3">Paper trail for the day</td>
-            <td style="padding:6px;border:1px solid #d9dee3">At least 1 year, then optional</td>
-          </tr>
-        </tbody>
-      </table>
-      <p class="small muted" style="margin-top:8px">
-        If you only save one thing: <b>the JSON backup</b>. Nothing else can restore your data.
-      </p>
     </div>
 
     <div class="card">
       <h2>✅ Checks and balances</h2>
-      <p class="small">Every day, match what the app says against what's in the drawer and terminal:</p>
+      <p class="small">Every day:</p>
       <ul class="help">
-        <li><b>Cash in the drawer</b> should match the <code>cash</code> amount on the day sheet.</li>
-        <li><b>Card terminal report</b> should match the <code>card</code> amount on the day sheet.</li>
-        <li><b>Sum of cash + card</b> should match the <code>paid</code> total for the day.</li>
+        <li><b>Cash in drawer</b> should match the <code>cash</code> amount on the day sheet</li>
+        <li><b>Card terminal</b> should match the <code>card</code> amount</li>
+        <li><b>Cash + card</b> should match the total <code>paid</code></li>
       </ul>
       <p class="small">Monthly:</p>
       <ul class="help">
-        <li><b>Monthly report revenue</b> should equal the sum of every day's totals for that month.</li>
-        <li><b>Monthly revenue − payroll − expenses</b> = the net per currency shown at the bottom.</li>
-        <li><b>Employee commissions</b> are computed on <b>billed</b> amounts — the full service price, whether or not the client has paid yet. You (the owner) are responsible for collecting unpaid balances; the app keeps a list under <b>Unpaid by Client</b>.</li>
-      </ul>
-      <p class="small muted">
-        If numbers don't match, check the appointment's payment record (tap it on the day grid).
-        The app never guesses — whatever you recorded is what it shows.
-      </p>
-    </div>
-
-    <div class="card" style="border-color:#ef6c00">
-      <h2 style="color:#ef6c00">💾 Backup &amp; restore in full</h2>
-      <p class="small">
-        The JSON backup is a <b>complete copy of everything</b>: employees, services, clients,
-        appointments, payments, expenses, settings, closed days, and currencies.
-        Restoring it replaces the entire database on the phone.
-      </p>
-      <p class="small"><b>To back up:</b></p>
-      <ol class="help">
-        <li>Reports → <b>⬇ Download JSON backup</b></li>
-        <li>Save the file to iCloud Drive or email it to yourself</li>
-      </ol>
-      <p class="small"><b>To restore on a new phone (or after a reset):</b></p>
-      <ol class="help">
-        <li>Copy the app file to the new phone — email it to yourself, AirDrop from a computer, or download from iCloud Drive</li>
-        <li>Open the file in Safari → <b>Add to Home Screen</b></li>
-        <li>Open the app → the wizard runs → complete it (it just needs a name, days, currencies, hours to get started)</li>
-        <li>Reports → <b>⬆ Restore from JSON</b> → pick your latest backup file</li>
-        <li>Confirm → the app reloads with <b>all your real data back</b> (the wizard setup is overwritten by the backup)</li>
-      </ol>
-      <p class="small muted">
-        <b>Important:</b> restoring replaces everything. Do not restore an old backup
-        over newer data unless you actually want to go back to that older state.
-      </p>
-    </div>
-
-    <div class="card">
-      <h2>Monthly report</h2>
-      <p class="small">
-        <b>Monthly</b> tab shows:
-      </p>
-      <ul class="help">
-        <li><b>Revenue</b> — total, paid, outstanding per currency</li>
-        <li><b>By Employee</b> — billed, paid, unpaid, and commission (on billed) per employee</li>
-        <li><b>Payroll</b> — base salary + commission per employee</li>
-        <li><b>Unpaid by Client</b> — who still owes you money this month</li>
-        <li><b>Expenses</b> — per currency, with paid / unpaid split</li>
-        <li><b>Net</b> — revenue − payroll − expenses, per currency</li>
-      </ul>
-      <p class="small">Use ◀ ▶ to change months. Export or print from the buttons at the top.</p>
-    </div>
-
-    <div class="card">
-      <h2>Salon open/closed days</h2>
-      <ul class="help">
-        <li>Your default closed days are set in the wizard.</li>
-        <li>In <b>Calendar</b>: greyed days = closed</li>
-        <li>Tap the <b>selected</b> day once to toggle open/closed</li>
-        <li>Tap a different day to select it, then tap again to toggle</li>
-        <li>Blue dot = day has appointments</li>
-        <li><b>Reset to my defaults</b> clears all manual overrides</li>
-      </ul>
-    </div>
-
-    <div class="card">
-      <h2>Employee absence</h2>
-      <ul class="help">
-        <li><b>Planned vacation:</b> Staff → Vacation → set a date range</li>
-        <li><b>Emergency today:</b> Day tab → tap the ON button in the employee's column header → OFF</li>
-        <li>Absent employees appear greyed and cannot be booked</li>
-      </ul>
-    </div>
-
-    <div class="card">
-      <h2>Currency notes</h2>
-      <ul class="help">
-        <li>You choose which currencies to enable in the wizard (NIS, JD, USD)</li>
-        <li>Prices can be in any enabled currency — mixed within one appointment is allowed</li>
-        <li>The app never converts between currencies — totals are shown per currency</li>
-        <li><b>Commission is a % of billed amounts</b>, per currency. It does not depend on whether the client has paid.</li>
-        <li>Salaries are entered in NIS only</li>
-        <li>Disabling a currency later does not delete old prices</li>
+        <li>Monthly revenue = sum of daily totals</li>
+        <li>Revenue − Payroll − Expenses = Net per currency</li>
+        <li><b>Commissions are on billed amounts</b> — the full service price, whether or not the client has paid yet</li>
       </ul>
     </div>
 
     <div class="card" style="border-color:#c62828">
       <h2 style="color:#c62828">⚠ Critical safety rules</h2>
       <ol class="help">
-        <li><b>Never clear Safari's browsing data or cache</b> — it erases ALL salon data from the phone (Settings → Safari → Clear History and Website Data). Avoid this entirely.</li>
-        <li><b>Never delete the HTML file</b> from Files — that's the app itself.</li>
-        <li><b>Back up the JSON at least once a week</b> (daily is better) — the only way to restore if the phone breaks.</li>
-        <li><b>Never restore an old JSON</b> over newer data unless you intend to lose the newer data.</li>
-        <li>To move to a new phone: install the app there, then <b>Restore from JSON</b>.</li>
-        <li><b>Use one browser only.</b> Safari and Chrome each have their own separate data. Stick to one.</li>
+        <li><b>Never clear Safari's browsing data or cache</b> — erases all data</li>
+        <li><b>Never delete the HTML file</b></li>
+        <li><b>Back up JSON at least once a week</b> (daily is better)</li>
+        <li><b>Never restore an old JSON</b> over newer data</li>
+        <li><b>Use one browser only</b> — Safari</li>
+        <li><b>Use one device as the live salon</b></li>
       </ol>
     </div>
 
     <div class="card">
-      <h2>If something looks wrong</h2>
+      <h2>💾 Backup &amp; restore</h2>
+      <ol class="help">
+        <li>Reports → <b>⬇ Download JSON backup</b> → save to iCloud</li>
+        <li>To restore: Reports → <b>⬆ Restore from JSON</b> → pick the file → confirm</li>
+      </ol>
+      <p class="small muted">Restoring replaces everything.</p>
+    </div>
+
+    <div class="card">
+      <h2>Currency notes</h2>
       <ul class="help">
-        <li><b>Red banner at top</b> → screenshot it and send it for a fix. It tells us the exact line.</li>
-        <li><b>Page looks blank</b> → close and reopen the app</li>
-        <li><b>A number looks wrong</b> → check the appointment's payment record; the app never guesses</li>
-        <li><b>Data missing after Erase</b> → that's expected; Erase clears everything. Restore from your latest JSON to bring it back.</li>
-        <li><b>Data missing after switching browsers</b> → each browser has its own data. Stick to one browser.</li>
+        <li>Choose which currencies you accept in the wizard</li>
+        <li>Service prices default to NIS, but clients can pay in any enabled currency</li>
+        <li>The app never converts between currencies</li>
+        <li>Use <b>"Fully settled"</b> in the payment dialog when a non-NIS payment covers the NIS bill</li>
+        <li><b>Commission is % of billed amounts</b>, per currency</li>
+        <li>Salaries in NIS only</li>
       </ul>
     </div>
 
     <div class="card center">
-      <p class="small muted">
-        Salon app — built for offline use on iPhone.<br>
-        All data stays on this device until you export it.
-      </p>
+      <p class="small muted">Salon app — built for offline use on iPhone.<br>All data stays on this device until you export it.</p>
     </div>
   </section>
 
@@ -1093,7 +968,6 @@ function apptPaymentTotals(a){
         amt = Number(entry.amount)||0;
         method = entry.method || 'cash';
       } else {
-        /* legacy format safety */
         amt = Number(entry)||0;
         method = 'cash';
       }
@@ -1108,6 +982,12 @@ function apptPaymentTotals(a){
       }
     }
   }
+
+  /* If the owner explicitly marked "fully settled", status = paid */
+  if(a.fullySettled){
+    return { totals:totals, paid:paid, paidCash:paidCash, paidCard:paidCard, status:'paid' };
+  }
+
   var hasTotal = false, fullyPaid = true, anyPaid = false;
   for(var c2 in totals){
     if(!Object.prototype.hasOwnProperty.call(totals,c2)) continue;
@@ -1125,7 +1005,6 @@ function apptPaymentTotals(a){
   }
   return { totals:totals, paid:paid, paidCash:paidCash, paidCard:paidCard, status:status };
 }
-
 function totalsBarHtml(tObj, pObj, label, cashObj, cardObj){
   var html = '';
   var curs = activeCurrencies();
@@ -1947,22 +1826,16 @@ function monthLabel(y, m){
 
 function computeMonthReport(y, m){
   var range = monthRange(y, m);
-    var result = {
+  var result = {
     range: range,
-    revenue: {},
+    currencies: {},
     byEmployee: {},
     byClient: {},
+    partiallyPaid: [],
     expenses: {},
-    apptCount: 0,
-    unpaidByEmployee: {},
-    paidCash: {},
-    paidCard: {}
+    payrollByCur: {},
+    apptCount: 0
   };
-  var curs = activeCurrencies();
-  for(var ci=0;ci<curs.length;ci++){
-    result.revenue[curs[ci].code] = {total:0,paid:0};
-    result.expenses[curs[ci].code] = {total:0,paid:0,unpaid:0};
-  }
 
   var appts = [];
   for(var i=0;i<DB.appointments.length;i++){
@@ -1974,15 +1847,14 @@ function computeMonthReport(y, m){
   for(var ai=0; ai<appts.length; ai++){
     var ap = appts[ai];
     var pt = apptPaymentTotals(ap);
-        for(var cur in pt.totals){
+
+    for(var cur in pt.totals){
       if(!Object.prototype.hasOwnProperty.call(pt.totals,cur)) continue;
-      if(!result.revenue[cur]) result.revenue[cur] = {total:0,paid:0};
-      result.revenue[cur].total += pt.totals[cur]||0;
-      result.revenue[cur].paid  += pt.paid[cur]||0;
-      if(!result.paidCash[cur]) result.paidCash[cur] = 0;
-      if(!result.paidCard[cur]) result.paidCard[cur] = 0;
-      result.paidCash[cur] += pt.paidCash[cur]||0;
-      result.paidCard[cur] += pt.paidCard[cur]||0;
+      if(!result.currencies[cur]){
+        result.currencies[cur] = { billed:0, paid:0, outstanding:0, payroll:0, expenses:0, net:0 };
+      }
+      result.currencies[cur].billed += pt.totals[cur]||0;
+      result.currencies[cur].paid   += pt.paid[cur]||0;
     }
 
     var svcs = ap.services || [];
@@ -1993,20 +1865,31 @@ function computeMonthReport(y, m){
       if(totalsPerCur[c] == null) totalsPerCur[c] = 0;
       totalsPerCur[c] += Number(s.price)||0;
     }
-        var paidPerCur = {};
+    var paidPerCur = {};
     if(ap.paid && typeof ap.paid === 'object'){
       for(var pk in ap.paid){
         if(!Object.prototype.hasOwnProperty.call(ap.paid,pk)) continue;
-        var entry = ap.paid[pk];
-        var v = 0;
-        if(entry && typeof entry === 'object'){
-          v = Number(entry.amount)||0;
-        } else {
-          v = Number(entry)||0;
-        }
-        paidPerCur[pk] = v;
+        var entryP = ap.paid[pk];
+        var amtP = (entryP && typeof entryP === 'object')
+          ? (Number(entryP.amount)||0)
+          : (Number(entryP)||0);
+        if(amtP > 0) paidPerCur[pk] = amtP;
       }
     }
+
+    var clientKey = ap.clientId || ('name:' + (ap.clientNameSnapshot||''));
+    if(!result.byClient[clientKey]){
+      var clientObj = clientById(ap.clientId);
+      result.byClient[clientKey] = {
+        name: clientObj ? clientObj.nameAr : (ap.clientNameSnapshot||''),
+        phone: clientObj ? (clientObj.phone||'') : (ap.clientPhoneSnapshot||''),
+        perCur: {},
+        lastService: '',
+        lastDate: ''
+      };
+    }
+    var clientRec = result.byClient[clientKey];
+
     for(var sj=0; sj<svcs.length; sj++){
       var s2 = svcs[sj];
       var cur2 = s2.currency || 'NIS';
@@ -2015,80 +1898,142 @@ function computeMonthReport(y, m){
       var curPaid = paidPerCur[cur2]||0;
       var share = (curTotal > 0) ? (svcPrice / curTotal) : 0;
       var paidShare = curPaid * share;
+      var unpaidShare = svcPrice - paidShare;
+
       var empId = s2.empId;
+      var emp = empById(empId);
       if(!result.byEmployee[empId]){
         result.byEmployee[empId] = {
-          nameAr: (empById(empId)||{}).nameAr || '?',
-          revenue: {}, paid: {}
+          nameAr: emp ? emp.nameAr : '?',
+          specialty: emp ? (emp.specialty || '') : '',
+          pct: emp ? (Number(emp.commissionPct)||0) : 0,
+          base: emp ? (Number(emp.baseSalary)||0) : 0,
+          baseCurrency: emp ? (emp.salaryCurrency || 'NIS') : 'NIS',
+          perCur: {}
         };
       }
       var be = result.byEmployee[empId];
-      if(!be.revenue[cur2]) be.revenue[cur2] = 0;
-      if(!be.paid[cur2]) be.paid[cur2] = 0;
-      be.revenue[cur2] += svcPrice;
-      be.paid[cur2] += paidShare;
+      if(!be.perCur[cur2]) be.perCur[cur2] = { billed:0, paid:0, commission:0 };
+      be.perCur[cur2].billed += svcPrice;
+      be.perCur[cur2].paid   += paidShare;
+      be.perCur[cur2].commission += svcPrice * (be.pct/100);
 
-      /* by-client tracking */
-      var clientId = ap.clientId || ('name:' + (ap.clientNameSnapshot||''));
-      if(!result.byClient[clientId]){
-        var clientObj = clientById(ap.clientId);
-        result.byClient[clientId] = {
-          name: clientObj ? clientObj.nameAr : (ap.clientNameSnapshot||''),
-          phone: clientObj ? (clientObj.phone||'') : (ap.clientPhoneSnapshot||''),
-          services: [],
-          unpaid: {}
-        };
+      if(!clientRec.perCur[cur2]) clientRec.perCur[cur2] = { billed:0, paid:0, owed:0 };
+      clientRec.perCur[cur2].billed += svcPrice;
+      clientRec.perCur[cur2].paid   += paidShare;
+      /* Fully settled or cross-currency-partial appointments
+         contribute zero owed here. */
+      if(ap.fullySettled){
+        clientRec.perCur[cur2].owed += 0;
+      } else {
+        var billCur = cur2;
+        var hasCross = false;
+        for(var xc in paidPerCur){
+          if(!Object.prototype.hasOwnProperty.call(paidPerCur,xc)) continue;
+          if(paidPerCur[xc] <= 0) continue;
+          if(xc !== billCur){ hasCross = true; break; }
+        }
+        if(hasCross){
+          clientRec.perCur[cur2].owed += 0;
+        } else {
+          clientRec.perCur[cur2].owed += unpaidShare;
+        }
       }
-      var svcPaid = paidShare;
-      var svcUnpaid = svcPrice - paidShare;
-      var empLookup = empById(empId);
-      result.byClient[clientId].services.push({
-        date: ap.date,
-        name: s2.name,
-        bodyPart: s2.bodyPart || '',
-        empName: empLookup ? empLookup.nameAr : '?',
-        price: svcPrice,
-        paid: svcPaid,
-        unpaid: svcUnpaid,
-        currency: cur2
-      });
-      if(svcUnpaid > 0.001){
-        if(!result.byClient[clientId].unpaid[cur2]) result.byClient[clientId].unpaid[cur2] = 0;
-        result.byClient[clientId].unpaid[cur2] += svcUnpaid;
+
+      if(!clientRec.lastDate || ap.date > clientRec.lastDate){
+        clientRec.lastDate = ap.date;
+        clientRec.lastService = s2.name + (s2.bodyPart ? ' ('+s2.bodyPart+')' : '') + ' · ' + ap.date.slice(5);
+      }
+    }
+
+    /* --- Detect cross-currency partials --- */
+    /* Fully settled appointments never appear in unpaid tracking. */
+    var isSettled = !!ap.fullySettled;
+    if(!isSettled){
+      var billedCurs = {};
+      for(var bci=0; bci<svcs.length; bci++){
+        var bc = svcs[bci].currency || 'NIS';
+        if(!billedCurs[bc]) billedCurs[bc] = 0;
+        billedCurs[bc] += Number(svcs[bci].price)||0;
+      }
+      var hasAnyPayment = false;
+      var hasCrossCurrency = false;
+      for(var pcn in paidPerCur){
+        if(!Object.prototype.hasOwnProperty.call(paidPerCur,pcn)) continue;
+        if(paidPerCur[pcn] <= 0) continue;
+        hasAnyPayment = true;
+        if(!billedCurs[pcn]){ hasCrossCurrency = true; break; }
+      }
+      if(hasAnyPayment && hasCrossCurrency){
+        var serviceDesc = '';
+        for(var sdi=0; sdi<svcs.length; sdi++){
+          var sd = svcs[sdi];
+          serviceDesc += (serviceDesc ? '; ' : '') +
+            sd.name + (sd.bodyPart ? ' ('+sd.bodyPart+')' : '');
+        }
+        var clientRecPP = result.byClient[clientKey];
+        var ppBilledLines = [];
+        for(var bpn in billedCurs){
+          if(!Object.prototype.hasOwnProperty.call(billedCurs,bpn)) continue;
+          ppBilledLines.push({ currency: bpn, amount: billedCurs[bpn] });
+        }
+        var ppPaidLines = [];
+        for(var ppn in paidPerCur){
+          if(!Object.prototype.hasOwnProperty.call(paidPerCur,ppn)) continue;
+          if(paidPerCur[ppn] <= 0) continue;
+          ppPaidLines.push({ currency: ppn, amount: paidPerCur[ppn] });
+        }
+        result.partiallyPaid.push({
+          clientKey: clientKey,
+          name: clientRecPP ? clientRecPP.name : (ap.clientNameSnapshot||''),
+          phone: clientRecPP ? clientRecPP.phone : (ap.clientPhoneSnapshot||''),
+          date: ap.date,
+          services: serviceDesc,
+          billed: ppBilledLines,
+          paid: ppPaidLines,
+          lastService: serviceDesc + ' · ' + ap.date.slice(5)
+        });
       }
     }
   }
 
-  for(var empId2 in result.byEmployee){
-    if(!Object.prototype.hasOwnProperty.call(result.byEmployee,empId2)) continue;
-    var be2 = result.byEmployee[empId2];
-    result.unpaidByEmployee[empId2] = {};
-    var seenCurs = {};
-    for(var rc in be2.revenue){
-      if(!Object.prototype.hasOwnProperty.call(be2.revenue,rc)) continue;
-      seenCurs[rc] = true;
+  for(var empIdX in result.byEmployee){
+    if(!Object.prototype.hasOwnProperty.call(result.byEmployee,empIdX)) continue;
+    var beX = result.byEmployee[empIdX];
+    var bc = beX.baseCurrency || 'NIS';
+    if(!result.payrollByCur[bc]) result.payrollByCur[bc] = { base:0, commission:0, total:0 };
+    result.payrollByCur[bc].base += beX.base;
+    for(var cY in beX.perCur){
+      if(!Object.prototype.hasOwnProperty.call(beX.perCur,cY)) continue;
+      if(!result.payrollByCur[cY]) result.payrollByCur[cY] = { base:0, commission:0, total:0 };
+      result.payrollByCur[cY].commission += beX.perCur[cY].commission;
     }
-    for(var pc in be2.paid){
-      if(!Object.prototype.hasOwnProperty.call(be2.paid,pc)) continue;
-      seenCurs[pc] = true;
-    }
-    for(var cc in seenCurs){
-      if(!Object.prototype.hasOwnProperty.call(seenCurs,cc)) continue;
-      var t2 = be2.revenue[cc]||0;
-      var p2 = be2.paid[cc]||0;
-      result.unpaidByEmployee[empId2][cc] = t2 - p2;
-    }
+  }
+  for(var cyT in result.payrollByCur){
+    if(!Object.prototype.hasOwnProperty.call(result.payrollByCur,cyT)) continue;
+    result.payrollByCur[cyT].total = result.payrollByCur[cyT].base + result.payrollByCur[cyT].commission;
   }
 
   for(var ei=0; ei<DB.expenses.length; ei++){
     var ex = DB.expenses[ei];
     if(ex.date < range.from || ex.date > range.to) continue;
     var exc = ex.currency || 'NIS';
-    if(!result.expenses[exc]) result.expenses[exc] = {total:0,paid:0,unpaid:0};
+    if(!result.expenses[exc]) result.expenses[exc] = { total:0, paid:0, unpaid:0 };
     var amt = Number(ex.amount)||0;
     result.expenses[exc].total += amt;
     if(ex.paid) result.expenses[exc].paid += amt;
     else result.expenses[exc].unpaid += amt;
+  }
+
+  for(var cy in result.currencies){
+    if(!Object.prototype.hasOwnProperty.call(result.currencies,cy)) continue;
+    var c2 = result.currencies[cy];
+    c2.outstanding = c2.billed - c2.paid;
+    var payCur = result.payrollByCur[cy];
+    var expCur = result.expenses[cy];
+    c2.payroll  = payCur ? payCur.total : 0;
+    c2.expenses = expCur ? expCur.total : 0;
+    c2.net = c2.billed - c2.payroll - c2.expenses;
   }
 
   return result;
@@ -2106,35 +2051,61 @@ function renderMonthly(){
   var curs = activeCurrencies();
   var html = '';
 
-  html += '<div class="card">';
-  html += '<h2 style="margin-top:0">Revenue</h2>';
-  html += '<div class="small muted">'+rep.apptCount+' appointment(s) in this month</div>';
-    var revHtml = '';
-  for(var i=0;i<curs.length;i++){
-    var c = curs[i];
-    var r = rep.revenue[c.code] || {total:0,paid:0};
-    if(r.total === 0 && r.paid === 0) continue;
-    var outstanding = r.total - r.paid;
-    var cashM = rep.paidCash[c.code]||0;
-    var cardM = rep.paidCard[c.code]||0;
-    var payDetail = '';
-    if(r.paid > 0){
-      if(cashM > 0 && cardM > 0){
-        payDetail = ' (cash ' + fmtMoney(cashM, c.code) + ' / card ' + fmtMoney(cardM, c.code) + ')';
-      } else if(cardM > 0){
-        payDetail = ' (card)';
-      } else {
-        payDetail = ' (cash)';
-      }
-    }
-    revHtml += '<div style="margin:4px 0"><b>'+c.code+':</b> ' + fmtMoney(r.total, c.code) +
-      ' total · ' + fmtMoney(r.paid, c.code) + ' paid' + payDetail +
-      (outstanding > 0 ? ' · <span style="color:#c62828">' + fmtMoney(outstanding, c.code) + ' outstanding</span>' : '') +
-      '</div>';
+  var activeCurs = [];
+  for(var ci=0; ci<curs.length; ci++){
+    var code = curs[ci].code;
+    var r = rep.currencies[code];
+    var p = rep.payrollByCur[code];
+    var e = rep.expenses[code];
+    var hasRev = r && (r.billed > 0 || r.paid > 0);
+    var hasPay = p && (p.base > 0 || p.commission > 0);
+    var hasExp = e && (e.total > 0);
+    if(hasRev || hasPay || hasExp) activeCurs.push(curs[ci]);
   }
-  html += revHtml || '<div class="muted small">No revenue</div>';
+
+  if(!activeCurs.length){
+    html += '<div class="card"><div class="empty">No activity for ' + monthLabel(monYear, monMonth) + '</div></div>';
+    document.getElementById('monReport').innerHTML = html;
+    return;
+  }
+
+  /* SUMMARY */
+  html += '<div class="card">';
+  html += '<h2 style="margin-top:0">Summary</h2>';
+  html += '<div class="small muted">' + rep.apptCount + ' appointment(s)</div>';
+  for(var si=0; si<activeCurs.length; si++){
+    var sc = activeCurs[si];
+    var scR = rep.currencies[sc.code] || {billed:0,paid:0,outstanding:0,payroll:0,expenses:0,net:0};
+    html += '<div style="border-top:1px solid var(--line);padding-top:8px;margin-top:8px">';
+    html += '<div style="font-weight:700;font-size:15px;margin-bottom:4px">' + sc.code + '</div>';
+    html += '<div class="small" style="line-height:1.7">';
+    html += '<div>Billed: <b>' + fmtMoney(scR.billed, sc.code) + '</b></div>';
+    html += '<div>Collected: <b>' + fmtMoney(scR.paid, sc.code) + '</b></div>';
+    html += '<div>Outstanding: <span style="color:#c62828"><b>' + fmtMoney(scR.outstanding, sc.code) + '</b></span></div>';
+    html += '<div>Payroll: <b>' + fmtMoney(scR.payroll, sc.code) + '</b></div>';
+    html += '<div>Expenses: <b>' + fmtMoney(scR.expenses, sc.code) + '</b></div>';
+    var netColor = scR.net >= 0 ? '#1b5e20' : '#c62828';
+    html += '<div>Net: <b style="color:'+netColor+'">' + fmtMoney(scR.net, sc.code) + '</b></div>';
+    html += '</div></div>';
+  }
   html += '</div>';
 
+  /* REVENUE */
+  html += '<div class="card">';
+  html += '<h2 style="margin-top:0">Revenue</h2>';
+  for(var ri=0; ri<activeCurs.length; ri++){
+    var rc = activeCurs[ri];
+    var rv = rep.currencies[rc.code];
+    if(!rv || (rv.billed === 0 && rv.paid === 0)) continue;
+    html += '<div class="small" style="margin:6px 0">' +
+      '<b>' + rc.code + '</b> — billed ' + fmtMoney(rv.billed, rc.code) +
+      ' · paid ' + fmtMoney(rv.paid, rc.code) +
+      ' · outstanding ' + fmtMoney(rv.outstanding, rc.code) +
+    '</div>';
+  }
+  html += '</div>';
+
+  /* BY EMPLOYEE */
   html += '<div class="card">';
   html += '<h2 style="margin-top:0">By Employee</h2>';
   var empIds = Object.keys(rep.byEmployee);
@@ -2144,26 +2115,22 @@ function renderMonthly(){
     for(var ei=0; ei<empIds.length; ei++){
       var empId = empIds[ei];
       var be = rep.byEmployee[empId];
-      var emp = empById(empId);
-      var commPct = emp ? (Number(emp.commissionPct)||0) : 0;
       html += '<div style="border-top:1px solid var(--line);padding-top:8px;margin-top:8px">';
-      html += '<div class="nmAr" style="font-size:16px">'+esc(be.nameAr)+'</div>';
-      html += '<div class="small muted">Commission: '+commPct+'%</div>';
+      html += '<div class="nmAr" style="font-size:16px">' + esc(be.nameAr) + '</div>';
+      html += '<div class="small muted">' + esc(be.specialty||'—') + ' · Commission: ' + be.pct + '%</div>';
       var anyCur = false;
-      for(var ci=0;ci<curs.length;ci++){
-        var cc = curs[ci];
-        var rev = be.revenue[cc.code]||0;
-        var pd = be.paid[cc.code]||0;
-        if(rev === 0 && pd === 0) continue;
+      for(var ci2=0; ci2<activeCurs.length; ci2++){
+        var cc = activeCurs[ci2];
+        var ec = be.perCur[cc.code];
+        if(!ec || (ec.billed === 0 && ec.paid === 0)) continue;
         anyCur = true;
-        var unpaidE = rev - pd;
-        var commAmt = rev * (commPct/100);
-                html += '<div class="small" style="margin:2px 0">' +
-          '<b>'+cc.code+'</b> — billed '+fmtMoney(rev, cc.code) +
-          ' · paid '+fmtMoney(pd, cc.code) +
-          (unpaidE > 0 ? ' · <span style="color:#c62828">unpaid '+fmtMoney(unpaidE, cc.code)+'</span>' : '') +
-          ' · <b>commission '+fmtMoney(commAmt, cc.code)+'</b>' +
-          '</div>';
+        var unpaidE = ec.billed - ec.paid;
+        html += '<div class="small" style="margin:3px 0">' +
+          '<b>' + cc.code + '</b> — billed ' + fmtMoney(ec.billed, cc.code) +
+          ' · paid ' + fmtMoney(ec.paid, cc.code) +
+          (unpaidE > 0.001 ? ' · unpaid ' + fmtMoney(unpaidE, cc.code) : '') +
+          ' · <b>commission ' + fmtMoney(ec.commission, cc.code) + '</b>' +
+        '</div>';
       }
       if(!anyCur) html += '<div class="small muted">No activity</div>';
       html += '</div>';
@@ -2171,132 +2138,159 @@ function renderMonthly(){
   }
   html += '</div>';
 
+  /* PAYROLL */
   html += '<div class="card">';
   html += '<h2 style="margin-top:0">Payroll</h2>';
-  var payrollByCur = {};
+  var payrollHasAny = false;
   for(var pi=0; pi<empIds.length; pi++){
     var peId = empIds[pi];
-    var pEmp = empById(peId);
-    if(!pEmp) continue;
     var pBe = rep.byEmployee[peId];
-    var pPct = Number(pEmp.commissionPct)||0;
-    var pBase = Number(pEmp.baseSalary)||0;
-    var pBaseCur = pEmp.salaryCurrency || 'NIS';
-    html += '<div style="border-top:1px solid var(--line);padding-top:8px;margin-top:8px">';
-    html += '<div class="nmAr" style="font-size:16px">'+esc(pEmp.nameAr)+'</div>';
-    html += '<div class="small">Base salary: '+fmtMoney(pBase, pBaseCur)+'</div>';
-    if(!payrollByCur[pBaseCur]) payrollByCur[pBaseCur] = 0;
-    payrollByCur[pBaseCur] += pBase;
-    for(var pci=0;pci<curs.length;pci++){
-      var pcc = curs[pci];
-            var pRev = pBe.revenue[pcc.code]||0;
-      if(pRev === 0) continue;
-      var pCommAmt = pRev * (pPct/100);
-      if(pCommAmt === 0) continue;
-            html += '<div class="small">Commission ('+pPct+'% of billed): '+fmtMoney(pCommAmt, pcc.code)+'</div>';
-      if(!payrollByCur[pcc.code]) payrollByCur[pcc.code] = 0;
-      payrollByCur[pcc.code] += pCommAmt;
+    var empHasAny = false;
+    var empLines = '';
+    if(pBe.base > 0){
+      empHasAny = true;
+      empLines += '<div class="small">Base salary: <b>' + fmtMoney(pBe.base, pBe.baseCurrency) + '</b></div>';
     }
+    for(var pci=0; pci<activeCurs.length; pci++){
+      var pcc = activeCurs[pci];
+      var pEc = pBe.perCur[pcc.code];
+      if(!pEc || pEc.commission === 0) continue;
+      empHasAny = true;
+      empLines += '<div class="small">Commission (' + pBe.pct + '%): <b>' + fmtMoney(pEc.commission, pcc.code) + '</b></div>';
+    }
+    if(!empHasAny) continue;
+    payrollHasAny = true;
+    html += '<div style="border-top:1px solid var(--line);padding-top:8px;margin-top:8px">';
+    html += '<div class="nmAr" style="font-size:15px">' + esc(pBe.nameAr) + '</div>';
+    html += empLines;
     html += '</div>';
   }
+  if(!payrollHasAny) html += '<div class="muted small">No payroll this month</div>';
   html += '<div class="hr"></div>';
   html += '<div><b>Total payroll</b></div>';
-  for(var pkc=0;pkc<curs.length;pkc++){
-    var pkc2 = curs[pkc];
-    if(payrollByCur[pkc2.code]){
-      html += '<div class="small money">'+pkc2.code+': '+fmtMoney(payrollByCur[pkc2.code], pkc2.code)+'</div>';
-    }
+  for(var pkc=0; pkc<activeCurs.length; pkc++){
+    var pkC = activeCurs[pkc];
+    var pr = rep.payrollByCur[pkC.code];
+    if(!pr || pr.total === 0) continue;
+    html += '<div class="small money">' + pkC.code + ': <b>' + fmtMoney(pr.total, pkC.code) + '</b></div>';
   }
   html += '</div>';
-  /* Unpaid by Client card */
-  var clientIds = Object.keys(rep.byClient || {});
-  var unpaidClients = [];
-  for(var ucx=0; ucx<clientIds.length; ucx++){
-    var cl = rep.byClient[clientIds[ucx]];
-    var clHasUnpaid = false;
-    for(var ccy in cl.unpaid){
-      if(!Object.prototype.hasOwnProperty.call(cl.unpaid,ccy)) continue;
-      if(cl.unpaid[ccy] > 0.001){ clHasUnpaid = true; break; }
-    }
-    if(clHasUnpaid) unpaidClients.push(cl);
-  }
-  if(unpaidClients.length){
-    /* Sort by total unpaid descending */
-    unpaidClients.sort(function(a,b){
-      var ta = 0, tb = 0;
-      for(var x in a.unpaid){ if(Object.prototype.hasOwnProperty.call(a.unpaid,x)) ta += a.unpaid[x]; }
-      for(var y in b.unpaid){ if(Object.prototype.hasOwnProperty.call(b.unpaid,y)) tb += b.unpaid[y]; }
-      return tb - ta;
-    });
-    html += '<div class="card" style="border-color:#c62828">';
-    html += '<h2 style="margin-top:0;color:#c62828">Unpaid by Client</h2>';
-    html += '<div class="small muted">Clients with outstanding balances for ' + monthLabel(monYear, monMonth) + '</div>';
-    var grandUnpaid = {};
-    for(var ui=0; ui<unpaidClients.length; ui++){
-      var cl2 = unpaidClients[ui];
-      var parts = [];
-      for(var cCode in cl2.unpaid){
-        if(!Object.prototype.hasOwnProperty.call(cl2.unpaid,cCode)) continue;
-        if(cl2.unpaid[cCode] <= 0.001) continue;
-        parts.push(fmtMoney(cl2.unpaid[cCode], cCode));
-        if(!grandUnpaid[cCode]) grandUnpaid[cCode] = 0;
-        grandUnpaid[cCode] += cl2.unpaid[cCode];
-      }
-      html += '<div style="border-top:1px solid var(--line);padding-top:6px;margin-top:6px">' +
-        '<span class="nmAr" style="direction:rtl;font-weight:700">'+esc(cl2.name)+'</span>' +
-        (cl2.phone ? ' <span class="small muted">· '+esc(cl2.phone)+'</span>' : '') +
-        ' — <b style="color:#c62828">'+esc(parts.join(' · '))+'</b>' +
-      '</div>';
-    }
-    var grandParts = [];
-    for(var gc in grandUnpaid){
-      if(!Object.prototype.hasOwnProperty.call(grandUnpaid,gc)) continue;
-      if(grandUnpaid[gc] <= 0.001) continue;
-      grandParts.push(fmtMoney(grandUnpaid[gc], gc));
-    }
-    if(grandParts.length){
-      html += '<div class="hr"></div>';
-      html += '<div style="font-weight:700">Total unpaid: '+esc(grandParts.join(' · '))+'</div>';
-    }
-    html += '</div>';
-  }
 
-  html += '<div class="card">';
-  html += '<h2 style="margin-top:0">Expenses</h2>';
+  /* EXPENSES */
   html += '<div class="card">';
   html += '<h2 style="margin-top:0">Expenses</h2>';
   var expAny = false;
-  for(var exi=0;exi<curs.length;exi++){
-    var exc = curs[exi];
-    var eTot = rep.expenses[exc.code] || {total:0,paid:0,unpaid:0};
-    if(eTot.total === 0) continue;
+  for(var exi=0; exi<activeCurs.length; exi++){
+    var exc = activeCurs[exi];
+    var eTot = rep.expenses[exc.code];
+    if(!eTot || eTot.total === 0) continue;
     expAny = true;
-    html += '<div style="margin:4px 0"><b>'+exc.code+':</b> ' +
-      fmtMoney(eTot.total, exc.code) +
-      ' (paid '+fmtMoney(eTot.paid, exc.code) +
-      (eTot.unpaid > 0 ? ' · <span style="color:#c62828">unpaid '+fmtMoney(eTot.unpaid, exc.code)+'</span>' : '') +
-      ')</div>';
+    html += '<div class="small" style="margin:4px 0">' +
+      '<b>' + exc.code + '</b> — total ' + fmtMoney(eTot.total, exc.code) +
+      ' · paid ' + fmtMoney(eTot.paid, exc.code) +
+      (eTot.unpaid > 0.001 ? ' · unpaid ' + fmtMoney(eTot.unpaid, exc.code) : '') +
+    '</div>';
   }
   if(!expAny) html += '<div class="muted small">No expenses</div>';
   html += '</div>';
 
+  /* UNPAID BY CLIENT */
+  var clientKeys = Object.keys(rep.byClient);
+  var unpaidRows = [];
+  for(var cki=0; cki<clientKeys.length; cki++){
+    var cKey = clientKeys[cki];
+    var cl = rep.byClient[cKey];
+    for(var cy in cl.perCur){
+      if(!Object.prototype.hasOwnProperty.call(cl.perCur,cy)) continue;
+      var cc2 = cl.perCur[cy];
+      if(cc2.owed > 0.001){
+        unpaidRows.push({
+          name: cl.name, phone: cl.phone, currency: cy,
+          billed: cc2.billed, paid: cc2.paid, owed: cc2.owed,
+          lastService: cl.lastService
+        });
+      }
+    }
+  }
+  unpaidRows.sort(function(a,b){ return b.owed - a.owed; });
+
+  if(unpaidRows.length){
+    html += '<div class="card" style="border-color:#c62828">';
+    html += '<h2 style="margin-top:0;color:#c62828">Unpaid by Client</h2>';
+    for(var ui=0; ui<unpaidRows.length; ui++){
+      var row = unpaidRows[ui];
+      html += '<div style="border-top:1px solid var(--line);padding-top:6px;margin-top:6px">' +
+        '<div><span class="nmAr" style="direction:rtl;font-weight:700">' + esc(row.name) + '</span>' +
+          (row.phone ? ' <span class="small muted">· ' + esc(row.phone) + '</span>' : '') +
+        '</div>' +
+        '<div class="small">' +
+          '<b>' + row.currency + '</b> — billed ' + fmtMoney(row.billed, row.currency) +
+          ' · paid ' + fmtMoney(row.paid, row.currency) +
+          ' · <b style="color:#c62828">owed ' + fmtMoney(row.owed, row.currency) + '</b>' +
+        '</div>' +
+        (row.lastService ? '<div class="small muted">Last: ' + esc(row.lastService) + '</div>' : '') +
+      '</div>';
+    }
+    var grandUnpaid = {};
+    for(var gi=0; gi<unpaidRows.length; gi++){
+      var r2 = unpaidRows[gi];
+      if(!grandUnpaid[r2.currency]) grandUnpaid[r2.currency] = 0;
+      grandUnpaid[r2.currency] += r2.owed;
+    }
+    html += '<div class="hr"></div>';
+    html += '<div style="font-weight:700">Total unpaid</div>';
+    for(var gCy in grandUnpaid){
+      if(!Object.prototype.hasOwnProperty.call(grandUnpaid,gCy)) continue;
+      html += '<div class="small money">' + gCy + ': <b style="color:#c62828">' + fmtMoney(grandUnpaid[gCy], gCy) + '</b></div>';
+    }
+    html += '</div>';
+  }
+
+  /* PARTIALLY PAID (cross-currency) */
+  if(rep.partiallyPaid && rep.partiallyPaid.length){
+    html += '<div class="card" style="border-color:#f9a825">';
+    html += '<h2 style="margin-top:0;color:#8d6e00">Partially Paid</h2>';
+    html += '<div class="small muted">Clients who paid in a currency different from their bill. The app does not convert — owner follows up.</div>';
+    for(var ppi=0; ppi<rep.partiallyPaid.length; ppi++){
+      var pp = rep.partiallyPaid[ppi];
+      html += '<div style="border-top:1px solid var(--line);padding-top:8px;margin-top:8px">';
+      html += '<div><span class="nmAr" style="direction:rtl;font-weight:700;font-size:15px">' + esc(pp.name) + '</span>';
+      if(pp.phone) html += ' <span class="small muted">· ' + esc(pp.phone) + '</span>';
+      html += '</div>';
+      /* Billed lines */
+      html += '<div class="small" style="margin-top:4px">';
+      for(var bi=0; bi<pp.billed.length; bi++){
+        html += '<div>Billed: <b>' + fmtMoney(pp.billed[bi].amount, pp.billed[bi].currency) + '</b> — ' + esc(pp.services) + '</div>';
+      }
+      html += '</div>';
+      /* Paid lines */
+      html += '<div class="small" style="margin-top:2px">';
+      for(var pi2=0; pi2<pp.paid.length; pi2++){
+        html += '<div>Paid: <b style="color:#2e7d32">' + fmtMoney(pp.paid[pi2].amount, pp.paid[pi2].currency) + '</b></div>';
+      }
+      html += '</div>';
+      html += '<div class="small muted" style="margin-top:4px">Owner to follow up for settlement</div>';
+      html += '</div>';
+    }
+    html += '</div>';
+  }
+
+  /* NET */
   html += '<div class="card">';
   html += '<h2 style="margin-top:0">Net (per currency)</h2>';
-  html += '<div class="small muted">Revenue − Payroll − Expenses. Currencies are not converted.</div>';
-  var netAny = false;
-  for(var ni=0;ni<curs.length;ni++){
-    var nc = curs[ni];
-    var rev = (rep.revenue[nc.code]||{}).total || 0;
-    var exp = (rep.expenses[nc.code]||{}).total || 0;
-    var pay = payrollByCur[nc.code]||0;
-    if(rev === 0 && exp === 0 && pay === 0) continue;
-    netAny = true;
-    var net = rev - exp - pay;
-    html += '<div style="margin:4px 0"><b>'+nc.code+':</b> ' +
-      fmtMoney(rev, nc.code) + ' − ' + fmtMoney(pay, nc.code) + ' − ' + fmtMoney(exp, nc.code) +
-      ' = <b style="color:'+(net>=0?'#1b5e20':'#c62828')+'">'+fmtMoney(net, nc.code)+'</b></div>';
+  for(var ni=0; ni<activeCurs.length; ni++){
+    var nc = activeCurs[ni];
+    var nR = rep.currencies[nc.code];
+    if(!nR) continue;
+    var netColor2 = nR.net >= 0 ? '#1b5e20' : '#c62828';
+    html += '<div class="small" style="margin:4px 0">' +
+      '<b>' + nc.code + '</b>: ' +
+      fmtMoney(nR.billed, nc.code) + ' − ' +
+      fmtMoney(nR.payroll, nc.code) + ' − ' +
+      fmtMoney(nR.expenses, nc.code) + ' = ' +
+      '<b style="color:' + netColor2 + '">' + fmtMoney(nR.net, nc.code) + '</b>' +
+    '</div>';
   }
-  if(!netAny) html += '<div class="muted small">No activity</div>';
   html += '</div>';
 
   document.getElementById('monReport').innerHTML = html;
@@ -2382,6 +2376,8 @@ function dayDateYmd(){ return document.getElementById('dayDate').value || S.toda
    DAY VIEW
    ============================================================ */
 function renderDay(){
+  var holder = document.getElementById('dayGridHolder');
+  if(holder) holder.innerHTML = '';
   var dateYmd = dayDateYmd();
   var closed = S.isSalonClosed(dateYmd);
   var appts = S.apptsOnDate(dateYmd);
@@ -2815,7 +2811,9 @@ function openBooking(initial){
     });
     saveDB();
     document.getElementById('sheetClose').click();
-    renderDay();
+    setTimeout(function(){
+      renderDay();
+    }, 60);
     S.toast('Appointment saved');
   }
 }
@@ -2881,6 +2879,9 @@ function openApptActions(apptId){
   if(a.paidAt){
     payTimestamp = '<div class="small muted" style="margin-top:4px">Paid at '+S.esc(S.fmtDateTimeShort(a.paidAt))+'</div>';
   }
+  if(a.fullySettled){
+    payTimestamp += '<div class="small" style="margin-top:4px;color:#2e7d32">✓ Marked as fully settled by owner</div>';
+  }
 
   var html =
     '<h2>Appointment</h2>' +
@@ -2921,23 +2922,28 @@ function openApptActions(apptId){
     startCopyMode(apptId);
   };
 
-  document.getElementById('aClose').onclick = function(){ document.getElementById('sheetClose').click(); };
+    document.getElementById('aClose').onclick = function(){ document.getElementById('sheetClose').click(); };
   document.getElementById('aPay').onclick = function(){
     paymentSheet(a, function(){
-      document.getElementById('sheetClose').click();
-      openApptActions(apptId);
-      renderDay();
+      /* paymentSheet already closed the sheet.
+         Give iOS a moment, then re-render the grid. */
+      setTimeout(function(){
+        renderDay();
+        /* Now reopen the detail sheet with fresh data from DB */
+        openApptActions(apptId);
+      }, 80);
     });
   };
   var clrBtn = document.getElementById('aClearPay');
   if(clrBtn){
     clrBtn.onclick = function(){
       S.confirmDialog('Clear the recorded payment for this appointment?', function(){
-        delete a.paid; delete a.paidAt;
+        delete a.paid; delete a.paidAt; delete a.fullySettled;
         saveDB();
-        document.getElementById('sheetClose').click();
-        openApptActions(apptId);
-        renderDay();
+        setTimeout(function(){
+          renderDay();
+          openApptActions(apptId);
+        }, 80);
         S.toast('Payment cleared');
       });
     };
@@ -2950,7 +2956,9 @@ function openApptActions(apptId){
       DB().appointments = out;
       saveDB();
       document.getElementById('sheetClose').click();
-      renderDay();
+      setTimeout(function(){
+        renderDay();
+      }, 60);
       S.toast('Deleted');
     });
   };
@@ -2961,6 +2969,7 @@ function openApptActions(apptId){
     DB().appointments = out;
     saveDB();
     document.getElementById('sheetClose').click();
+    renderDay();
     var prefillSvcs = [];
     for(var z=0;z<a.services.length;z++){
       var s = a.services[z];
@@ -2969,26 +2978,28 @@ function openApptActions(apptId){
         bodyPart:s.bodyPart||'', price:s.price, currency:s.currency
       });
     }
-    openBooking({
-      date: a.date,
-      startMin: a.startMin,
-      prefillServices: prefillSvcs,
-      prefillClientId: a.clientId,
-      prefillNotes: a.notes
-    });
+    setTimeout(function(){
+      openBooking({
+        date: a.date,
+        startMin: a.startMin,
+        prefillServices: prefillSvcs,
+        prefillClientId: a.clientId,
+        prefillNotes: a.notes
+      });
+    }, 60);
   };
 }
 
 function paymentSheet(a, onSaved){
   var pay = S.apptPaymentTotals(a);
-  var rows = '';
-  var anyRow = false;
   var curs = S.activeCurrencies();
+  var anyRow = false;
+
+  /* Build inputs for all enabled currencies */
+  var rows = '';
   for(var i=0;i<curs.length;i++){
     var cur = curs[i];
-    var t = pay.totals[cur.code]||0;
-    if(t <= 0) continue;
-    anyRow = true;
+    var t = pay.totals[cur.code]||0;   /* billed in this currency */
     var existing = (a.paid && a.paid[cur.code]) ? a.paid[cur.code] : null;
     var curAmt = 0, curMethod = 'cash';
     if(existing && typeof existing === 'object'){
@@ -2997,8 +3008,10 @@ function paymentSheet(a, onSaved){
     } else if(existing != null){
       curAmt = Number(existing)||0;
     }
+    anyRow = true;
+    var label = cur.label + (t > 0 ? ' — billed ' + S.fmtMoney(t, cur.code) : '');
     rows += '<div style="margin-top:10px">' +
-      '<label>'+cur.label+' — total '+S.fmtMoney(t, cur.code)+'</label>' +
+      '<label>'+label+'</label>' +
       '<div class="row">' +
         '<input class="payInput" data-cur="'+cur.code+'" type="number" min="0" step="0.01" ' +
           'value="'+(curAmt||'')+'" placeholder="0" style="flex:2">' +
@@ -3010,47 +3023,58 @@ function paymentSheet(a, onSaved){
     '</div>';
   }
   if(!anyRow){
-    rows = '<div class="small muted">No prices recorded on this appointment. Add prices in the booking first.</div>';
+    rows = '<div class="small muted">No currencies enabled.</div>';
   }
+
+  /* Existing "fully settled" flag */
+  var fullyChecked = a.fullySettled ? 'checked' : '';
+
   var html =
     '<h2>Mark as Paid</h2>' +
-    '<div class="small muted">Enter the amount received in each currency and choose Cash or Card.</div>' +
+    '<div class="small muted">Enter the amount received in each currency. Leave blank for currencies you did not receive.</div>' +
     rows +
+    '<label style="display:flex;align-items:flex-start;gap:8px;margin-top:14px;font-size:14px;color:var(--text)">' +
+      '<input type="checkbox" id="payFully" '+fullyChecked+' style="width:auto;min-height:auto;margin-top:2px">' +
+      '<span><b>This fully settles the bill</b><br>' +
+      '<span class="small muted">Check if the payment covers the full amount, even if the currency differs from the bill.</span></span>' +
+    '</label>' +
     '<div class="row" style="margin-top:14px">' +
       '<button class="grow" id="payCancel">Cancel</button>' +
-      (anyRow ? '<button class="primary grow" id="paySave">Save Payment</button>' : '') +
+      '<button class="primary grow" id="paySave">Save Payment</button>' +
     '</div>';
   S.openSheet(html);
   document.getElementById('payCancel').onclick = function(){ document.getElementById('sheetClose').click(); };
-  var saveBtn = document.getElementById('paySave');
-  if(saveBtn){
-    saveBtn.onclick = function(){
-      var paidMap = {};
-      var inputs = document.querySelectorAll('.payInput');
-      var methods = document.querySelectorAll('.payMethod');
-      var methodByCur = {};
-      for(var m=0;m<methods.length;m++){
-        methodByCur[methods[m].dataset.cur] = methods[m].value;
+  document.getElementById('paySave').onclick = function(){
+    var paidMap = {};
+    var inputs = document.querySelectorAll('.payInput');
+    var methods = document.querySelectorAll('.payMethod');
+    var methodByCur = {};
+    for(var m=0;m<methods.length;m++){
+      methodByCur[methods[m].dataset.cur] = methods[m].value;
+    }
+    for(var i=0;i<inputs.length;i++){
+      var v = Number(inputs[i].value)||0;
+      var cur = inputs[i].dataset.cur;
+      if(v > 0){
+        paidMap[cur] = { amount: v, method: methodByCur[cur] || 'cash' };
       }
-      for(var i=0;i<inputs.length;i++){
-        var v = Number(inputs[i].value)||0;
-        var cur = inputs[i].dataset.cur;
-        if(v > 0){
-          paidMap[cur] = { amount: v, method: methodByCur[cur] || 'cash' };
-        }
-      }
-      if(Object.keys(paidMap).length === 0){
-        S.toast('Enter at least one amount');
-        return;
-      }
-      a.paid = paidMap;
-      a.paidAt = Date.now();
-      saveDB();
-      document.getElementById('sheetClose').click();
-      if(onSaved) onSaved();
-      S.toast('Payment saved');
-    };
-  }
+    }
+    var fully = document.getElementById('payFully').checked;
+
+    if(Object.keys(paidMap).length === 0 && !fully){
+      S.toast('Enter at least one amount or check "Fully settled"');
+      return;
+    }
+
+    a.paid = paidMap;
+    a.paidAt = Date.now();
+    a.fullySettled = fully ? true : false;
+    if(!fully) delete a.fullySettled;
+    saveDB();
+    document.getElementById('sheetClose').click();
+    if(onSaved) onSaved();
+    S.toast('Payment saved');
+  };
 }
 
 
@@ -3580,137 +3604,188 @@ document.getElementById('btnPreviewDayCsv').onclick = function(){
 document.getElementById('btnMonCsv').onclick = function(){
   var y = S.monYear, m = S.monMonth;
   if(y == null || m == null){ S.toast('Open Monthly tab first'); return; }
+
   var rep = S.computeMonthReport(y, m);
   var label = S.monthLabel(y, m);
-  var lines = [];
   var curs = S.activeCurrencies();
-  function row(arr){ lines.push(arr.map(csvCell).join(',')); }
-  function blank(){ lines.push(''); }
-  function section(title){ blank(); row(['== '+title+' ==']); }
 
-  row(['Monthly Report', label]);
-  blank();
-  row(['Metric','Currency','Amount']);
-  row(['Appointments', '', rep.apptCount]);
-
-  section('REVENUE');
-  row(['Currency','Total','Paid','Outstanding']);
-  for(var i=0;i<curs.length;i++){
-    var c = curs[i];
-    var r = rep.revenue[c.code]||{total:0,paid:0};
-    if(r.total === 0 && r.paid === 0) continue;
-    row([c.code, r.total, r.paid, r.total - r.paid]);
+  /* Only currencies with activity in this month */
+  var activeCurs = [];
+  for(var ci=0; ci<curs.length; ci++){
+    var code0 = curs[ci].code;
+    var r0 = rep.currencies[code0];
+    var p0 = rep.payrollByCur[code0];
+    var e0 = rep.expenses[code0];
+    var hasRev = r0 && (r0.billed > 0 || r0.paid > 0);
+    var hasPay = p0 && (p0.base > 0 || p0.commission > 0);
+    var hasExp = e0 && (e0.total > 0);
+    if(hasRev || hasPay || hasExp) activeCurs.push(curs[ci]);
   }
 
-  section('BY EMPLOYEE');
-  row(['Employee','Currency','Revenue','Paid','Unpaid','Commission %','Commission Amount']);
+  var lines = [];
+  function r(arr){ lines.push(arr.map(csvCell).join(',')); }
+  function blank(){ lines.push(''); }
+
+  /* ---------- TOP OF FILE ---------- */
+  r(['Monthly Report', label]);
+  blank();
+
+  /* ---------- APPOINTMENTS ---------- */
+  r(['Metric','Currency','Amount']);
+  r(['Appointments', '', rep.apptCount]);
+  blank();
+
+  /* ---------- REVENUE ---------- */
+  r(['== REVENUE ==']);
+  r(['Currency','Total','Paid','Outstanding']);
+  for(var ri=0; ri<activeCurs.length; ri++){
+    var rc = activeCurs[ri];
+    var rv = rep.currencies[rc.code];
+    if(!rv || (rv.billed === 0 && rv.paid === 0)) continue;
+    r([rc.code, rv.billed, rv.paid, rv.outstanding]);
+  }
+  blank();
+
+  /* ---------- BY EMPLOYEE ---------- */
+  r(['== BY EMPLOYEE ==']);
+  r(['Employee','Currency','Revenue','Paid','Unpaid','Commission %','Commission Amount']);
   var empIds = Object.keys(rep.byEmployee);
-  for(var ei=0;ei<empIds.length;ei++){
+  for(var ei=0; ei<empIds.length; ei++){
     var empId = empIds[ei];
     var be = rep.byEmployee[empId];
-    var emp = S.empById(empId);
-    var pct = emp ? (Number(emp.commissionPct)||0) : 0;
-    for(var ci=0;ci<curs.length;ci++){
-      var cc = curs[ci];
-      var rev = be.revenue[cc.code]||0;
-      var pd = be.paid[cc.code]||0;
-      if(rev === 0 && pd === 0) continue;
-      row([be.nameAr, cc.code, rev, pd, rev-pd, pct, rev*(pct/100)]);
-    }
-  }
-
-  section('PAYROLL');
-  row(['Employee','Type','Currency','Amount']);
-  var payrollByCur = {};
-  for(var pi=0;pi<empIds.length;pi++){
-    var peId = empIds[pi];
-    var pEmp = S.empById(peId);
-    if(!pEmp) continue;
-    var pBe = rep.byEmployee[peId];
-    var pPct = Number(pEmp.commissionPct)||0;
-    var pBase = Number(pEmp.baseSalary)||0;
-    var pBaseCur = pEmp.salaryCurrency || 'NIS';
-    row([pEmp.nameAr, 'Base salary', pBaseCur, pBase]);
-    if(!payrollByCur[pBaseCur]) payrollByCur[pBaseCur] = 0;
-    payrollByCur[pBaseCur] += pBase;
-    for(var pci=0;pci<curs.length;pci++){
-      var pcc = curs[pci];
-            var pRev = pBe.revenue[pcc.code]||0;
-      if(pRev === 0) continue;
-      var pComm = pRev * (pPct/100);
-      if(pComm === 0) continue;
-      row([pEmp.nameAr, 'Commission', pcc.code, pComm]);
-      if(!payrollByCur[pcc.code]) payrollByCur[pcc.code] = 0;
-      payrollByCur[pcc.code] += pComm;
+    for(var eci=0; eci<activeCurs.length; eci++){
+      var ecc = activeCurs[eci];
+      var ec = be.perCur[ecc.code];
+      if(!ec || (ec.billed === 0 && ec.paid === 0)) continue;
+      var unpaidE = ec.billed - ec.paid;
+      r([be.nameAr, ecc.code, ec.billed, ec.paid, unpaidE, be.pct, ec.commission]);
     }
   }
   blank();
-  row(['TOTAL PAYROLL']);
-  for(var pkc=0;pkc<curs.length;pkc++){
-    var pkc2 = curs[pkc];
-    if(payrollByCur[pkc2.code]) row(['', '', pkc2.code, payrollByCur[pkc2.code]]);
+
+  /* ---------- PAYROLL ---------- */
+  r(['== PAYROLL ==']);
+  r(['Employee','Type','Currency','Amount']);
+  var payrollByCur = {};
+  for(var pi=0; pi<empIds.length; pi++){
+    var pBe = rep.byEmployee[empIds[pi]];
+    var baseCur = pBe.baseCurrency || 'NIS';
+    /* A+C: always show base row for employees present in payroll data */
+    r([pBe.nameAr, 'Base salary', baseCur, pBe.base]);
+    if(!payrollByCur[baseCur]) payrollByCur[baseCur] = 0;
+    payrollByCur[baseCur] += pBe.base;
+    for(var pci=0; pci<activeCurs.length; pci++){
+      var pcc = activeCurs[pci];
+      var pEc = pBe.perCur[pcc.code];
+      if(!pEc || pEc.commission === 0) continue;
+      r([pBe.nameAr, 'Commission', pcc.code, pEc.commission]);
+      if(!payrollByCur[pcc.code]) payrollByCur[pcc.code] = 0;
+      payrollByCur[pcc.code] += pEc.commission;
+    }
+  }
+  blank();
+  r(['TOTAL PAYROLL']);
+  for(var pkc=0; pkc<activeCurs.length; pkc++){
+    var pkC = activeCurs[pkc];
+    var pTot = payrollByCur[pkC.code];
+    if(!pTot) continue;
+    r(['', '', pkC.code, pTot]);
+  }
+  blank();
+
+  /* ---------- EXPENSES ---------- */
+  r(['== EXPENSES ==']);
+  r(['Currency','Total','Paid','Unpaid']);
+  for(var exi=0; exi<activeCurs.length; exi++){
+    var exc = activeCurs[exi];
+    var eTot = rep.expenses[exc.code];
+    if(!eTot || eTot.total === 0) continue;
+    r([exc.code, eTot.total, eTot.paid, eTot.unpaid]);
+  }
+  blank();
+
+  /* ---------- UNPAID BY CLIENT (one row per service) ---------- */
+  var clientKeys = Object.keys(rep.byClient);
+  var unpaidServiceRows = [];
+  for(var cki=0; cki<clientKeys.length; cki++){
+    var cKey = clientKeys[cki];
+    var cl = rep.byClient[cKey];
+    var clPh = cl.phone || '';
+    if(!cl.services) continue;
+    for(var si=0; si<cl.services.length; si++){
+      var sv = cl.services[si];
+      if(!sv || sv.unpaid <= 0.001) continue;
+      unpaidServiceRows.push({
+        client: cl.name,
+        phone: clPh,
+        service: sv.name + (sv.bodyPart ? ' ('+sv.bodyPart+')' : ''),
+        date: sv.date,
+        employee: sv.empName,
+        price: sv.price,
+        paid: sv.paid,
+        unpaid: sv.unpaid,
+        currency: sv.currency
+      });
+    }
   }
 
-  section('EXPENSES');
-  row(['Currency','Total','Paid','Unpaid']);
-  for(var exi=0;exi<curs.length;exi++){
-    var exc = curs[exi];
-    var eTot = rep.expenses[exc.code] || {total:0,paid:0,unpaid:0};
-    if(eTot.total === 0) continue;
-    row([exc.code, eTot.total, eTot.paid, eTot.unpaid]);
-  }
-  section('UNPAID BY CLIENT');
-  row(['Client','Phone','Service','Date','Employee','Price','Paid','Unpaid','Currency']);
-  var clientIdsCsv = Object.keys(rep.byClient || {});
-  var grandUnpaidCsv = {};
-  var anyUnpaidCsv = false;
-  for(var uci=0; uci<clientIdsCsv.length; uci++){
-    var clCsv = rep.byClient[clientIdsCsv[uci]];
-    if(!clCsv || !clCsv.services) continue;
-    /* Filter to only unpaid services */
-    var unpaidRowsCsv = [];
-    for(var svi=0; svi<clCsv.services.length; svi++){
-      if(clCsv.services[svi].unpaid > 0.001) unpaidRowsCsv.push(clCsv.services[svi]);
+  if(unpaidServiceRows.length){
+    r(['== UNPAID BY CLIENT ==']);
+    r(['Client','Phone','Service','Date','Employee','Price','Paid','Unpaid','Currency']);
+    for(var ui=0; ui<unpaidServiceRows.length; ui++){
+      var u = unpaidServiceRows[ui];
+      r([u.client, u.phone, u.service, u.date, u.employee,
+         u.price, u.paid, u.unpaid, u.currency]);
     }
-    if(!unpaidRowsCsv.length) continue;
-    anyUnpaidCsv = true;
-    for(var uri=0; uri<unpaidRowsCsv.length; uri++){
-      var rCsv = unpaidRowsCsv[uri];
-      row([
-        clCsv.name,
-        clCsv.phone,
-        rCsv.name + (rCsv.bodyPart ? ' ('+rCsv.bodyPart+')' : ''),
-        rCsv.date,
-        rCsv.empName,
-        rCsv.price,
-        rCsv.paid,
-        rCsv.unpaid,
-        rCsv.currency
-      ]);
-      if(!grandUnpaidCsv[rCsv.currency]) grandUnpaidCsv[rCsv.currency] = 0;
-      grandUnpaidCsv[rCsv.currency] += rCsv.unpaid;
-    }
-  }
-  if(anyUnpaidCsv){
     blank();
-    row(['TOTAL UNPAID']);
-    for(var guCy in grandUnpaidCsv){
-      if(!Object.prototype.hasOwnProperty.call(grandUnpaidCsv,guCy)) continue;
-      if(grandUnpaidCsv[guCy] <= 0.001) continue;
-      row(['', '', '', '', '', '', '', grandUnpaidCsv[guCy], guCy]);
+    r(['TOTAL UNPAID']);
+    var grandUnpaid = {};
+    for(var gi=0; gi<unpaidServiceRows.length; gi++){
+      var gr = unpaidServiceRows[gi];
+      if(!grandUnpaid[gr.currency]) grandUnpaid[gr.currency] = 0;
+      grandUnpaid[gr.currency] += gr.unpaid;
     }
+    for(var gCy in grandUnpaid){
+      if(!Object.prototype.hasOwnProperty.call(grandUnpaid,gCy)) continue;
+      if(grandUnpaid[gCy] <= 0.001) continue;
+      /* Pad to 9 columns to align with the section header */
+      r(['', '', '', '', '', '', '', grandUnpaid[gCy], gCy]);
+    }
+    blank();
   }
 
-  section('NET PER CURRENCY (revenue - payroll - expenses)');
-  section('NET PER CURRENCY (revenue - payroll - expenses)');
-  row(['Currency','Revenue','Payroll','Expenses','Net']);
-  for(var ni=0;ni<curs.length;ni++){
-    var nc = curs[ni];
-    var rev2 = (rep.revenue[nc.code]||{}).total || 0;
-    var exp2 = (rep.expenses[nc.code]||{}).total || 0;
-    var pay2 = payrollByCur[nc.code]||0;
-    if(rev2 === 0 && exp2 === 0 && pay2 === 0) continue;
-    row([nc.code, rev2, pay2, exp2, rev2 - exp2 - pay2]);
+  /* ---------- PARTIALLY PAID (one row per paid currency) ---------- */
+  if(rep.partiallyPaid && rep.partiallyPaid.length){
+    r(['== PARTIALLY PAID ==']);
+    r(['Client','Phone','Billed Currency','Billed Amount','Paid Currency','Paid Amount','Services','Last Service']);
+    for(var ppi=0; ppi<rep.partiallyPaid.length; ppi++){
+      var pp = rep.partiallyPaid[ppi];
+      for(var bi=0; bi<pp.billed.length; bi++){
+        for(var pi2=0; pi2<pp.paid.length; pi2++){
+          r([
+            pp.name,
+            pp.phone || '',
+            pp.billed[bi].currency,
+            pp.billed[bi].amount,
+            pp.paid[pi2].currency,
+            pp.paid[pi2].amount,
+            pp.services,
+            pp.lastService
+          ]);
+        }
+      }
+    }
+    blank();
+  }
+
+  /* ---------- NET PER CURRENCY (emitted once) ---------- */
+  r(['== NET PER CURRENCY (revenue - payroll - expenses) ==']);
+  r(['Currency','Revenue','Payroll','Expenses','Net']);
+  for(var ni=0; ni<activeCurs.length; ni++){
+    var nc = activeCurs[ni];
+    var nR = rep.currencies[nc.code];
+    if(!nR) continue;
+    r([nc.code, nR.billed, nR.payroll, nR.expenses, nR.net]);
   }
 
   var csv = '\uFEFF' + lines.join('\r\n');
@@ -3722,148 +3797,271 @@ document.getElementById('btnMonCsv').onclick = function(){
 document.getElementById('btnMonPrint').onclick = function(){
   var y = S.monYear, m = S.monMonth;
   if(y == null || m == null){ S.toast('Open Monthly tab first'); return; }
+
   var rep = S.computeMonthReport(y, m);
   var label = S.monthLabel(y, m);
   var curs = S.activeCurrencies();
+  var salonName = (DB().settings && DB().settings.salonName) || 'Salon';
+
+  /* Only currencies with activity */
+  var activeCurs = [];
+  for(var ci=0; ci<curs.length; ci++){
+    var code0 = curs[ci].code;
+    var r0 = rep.currencies[code0];
+    var p0 = rep.payrollByCur[code0];
+    var e0 = rep.expenses[code0];
+    var hasRev = r0 && (r0.billed > 0 || r0.paid > 0);
+    var hasPay = p0 && (p0.base > 0 || p0.commission > 0);
+    var hasExp = e0 && (e0.total > 0);
+    if(hasRev || hasPay || hasExp) activeCurs.push(curs[ci]);
+  }
+
+  /* Printed timestamp, e.g. 2026-09-28 15:42 */
+  var now = new Date();
+  var printedAt = now.getFullYear() + '-' +
+    S.pad(now.getMonth()+1) + '-' +
+    S.pad(now.getDate()) + ' ' +
+    S.pad(now.getHours()) + ':' +
+    S.pad(now.getMinutes());
 
   var h = '<div class="printSheet">';
-  h += '<div class="printHead">Monthly Report — ' + S.esc(label) + '</div>';
-  h += '<div>Appointments: ' + rep.apptCount + '</div>';
+  h += '<div class="printHead">' + S.esc(salonName) + ' — Monthly Report</div>';
+  h += '<div style="font-size:13px">' + S.esc(label) + ' · ' + rep.apptCount + ' appointment(s)</div>';
+  h += '<div style="font-size:12px;color:#666">Printed: ' + S.esc(printedAt) + '</div>';
 
-  h += '<div class="hr"></div><b>Revenue</b>';
-  for(var i=0;i<curs.length;i++){
-    var c = curs[i];
-    var r = rep.revenue[c.code]||{total:0,paid:0};
-    if(r.total === 0 && r.paid === 0) continue;
-    h += '<div>'+c.code+': total '+S.fmtMoney(r.total,c.code)+
-         ' · paid '+S.fmtMoney(r.paid,c.code)+
-         ' · outstanding '+S.fmtMoney(r.total - r.paid, c.code)+'</div>';
-  }
-
-  h += '<div class="hr"></div><b>By Employee</b>';
-  var empIds = Object.keys(rep.byEmployee);
-  for(var ei=0;ei<empIds.length;ei++){
-    var empId = empIds[ei];
-    var be = rep.byEmployee[empId];
-    var emp = S.empById(empId);
-    var pct = emp ? (Number(emp.commissionPct)||0) : 0;
-    h += '<div style="margin-top:6px"><b>'+S.esc(be.nameAr)+'</b> ('+pct+'%)</div>';
-    for(var ci=0;ci<curs.length;ci++){
-      var cc = curs[ci];
-      var rev = be.revenue[cc.code]||0;
-      var pd = be.paid[cc.code]||0;
-      if(rev === 0 && pd === 0) continue;
-      h += '<div style="font-size:13px">'+cc.code+
-        ' — revenue '+S.fmtMoney(rev,cc.code)+
-        ' · paid '+S.fmtMoney(pd,cc.code)+
-        ' · unpaid '+S.fmtMoney(rev-pd,cc.code)+
-        ' · commission '+S.fmtMoney(pd*(pct/100),cc.code)+'</div>';
-    }
-  }
-
-  h += '<div class="hr"></div><b>Payroll</b>';
-  var payrollByCur = {};
-  for(var pi=0;pi<empIds.length;pi++){
-    var pEmp = S.empById(empIds[pi]);
-    if(!pEmp) continue;
-    var pBe = rep.byEmployee[empIds[pi]];
-    var pPct = Number(pEmp.commissionPct)||0;
-    var pBase = Number(pEmp.baseSalary)||0;
-    var pBaseCur = pEmp.salaryCurrency || 'NIS';
-    h += '<div style="font-size:13px"><b>'+S.esc(pEmp.nameAr)+'</b> — base '+S.fmtMoney(pBase,pBaseCur);
-    if(!payrollByCur[pBaseCur]) payrollByCur[pBaseCur] = 0;
-    payrollByCur[pBaseCur] += pBase;
-    for(var pci=0;pci<curs.length;pci++){
-      var pcc = curs[pci];
-      var pRev = pBe.revenue[pcc.code]||0;
-      if(pRev === 0) continue;
-      var pComm = pRev*(pPct/100);
-      if(pComm === 0) continue;
-      h += ' + comm '+S.fmtMoney(pComm,pcc.code);
-      if(!payrollByCur[pcc.code]) payrollByCur[pcc.code] = 0;
-      payrollByCur[pcc.code] += pComm;
+  /* ---------- 1. SUMMARY ---------- */
+  if(activeCurs.length){
+    h += '<div class="printTotals" style="border-top:2px solid #000;margin-top:10px">';
+    h += '<div style="font-weight:700;font-size:14px;margin-bottom:4px">Summary</div>';
+    for(var si=0; si<activeCurs.length; si++){
+      var sc = activeCurs[si];
+      var scR = rep.currencies[sc.code] || {billed:0,paid:0,outstanding:0,payroll:0,expenses:0,net:0};
+      h += '<div style="font-weight:700;margin-top:6px">' + S.esc(sc.code) + '</div>';
+      h += '<div>Billed: ' + S.esc(S.fmtMoney(scR.billed, sc.code)) + '</div>';
+      h += '<div>Collected: ' + S.esc(S.fmtMoney(scR.paid, sc.code)) + '</div>';
+      h += '<div>Outstanding: ' + S.esc(S.fmtMoney(scR.outstanding, sc.code)) + '</div>';
+      h += '<div>Payroll: ' + S.esc(S.fmtMoney(scR.payroll, sc.code)) + '</div>';
+      h += '<div>Expenses: ' + S.esc(S.fmtMoney(scR.expenses, sc.code)) + '</div>';
+      h += '<div>Net: ' + S.esc(S.fmtMoney(scR.net, sc.code)) + '</div>';
     }
     h += '</div>';
   }
-  h += '<div><b>Total payroll:</b> ';
-  var ptxt = [];
-  for(var pkc=0;pkc<curs.length;pkc++){
-    var pkc2 = curs[pkc];
-    if(payrollByCur[pkc2.code]) ptxt.push(pkc2.code+' '+S.fmtMoney(payrollByCur[pkc2.code], pkc2.code));
-  }
-  h += ptxt.join(' · ') || '—';
-  h += '</div>';
 
-    h += '<div class="hr"></div><b>Expenses</b>';
-  for(var exi=0;exi<curs.length;exi++){
-    var exc = curs[exi];
-    var eTot = rep.expenses[exc.code] || {total:0,paid:0,unpaid:0};
-    if(eTot.total === 0) continue;
-    h += '<div>'+exc.code+': '+S.fmtMoney(eTot.total,exc.code)+
-         ' (paid '+S.fmtMoney(eTot.paid,exc.code)+
-         ' · unpaid '+S.fmtMoney(eTot.unpaid,exc.code)+')</div>';
+  /* ---------- 2. REVENUE ---------- */
+  h += '<div style="margin-top:12px"><b>Revenue</b></div>';
+  var anyRev = false;
+  for(var ri=0; ri<activeCurs.length; ri++){
+    var rc = activeCurs[ri];
+    var rv = rep.currencies[rc.code];
+    if(!rv || (rv.billed === 0 && rv.paid === 0)) continue;
+    anyRev = true;
+    h += '<div>' + S.esc(rc.code) +
+      ' — billed ' + S.esc(S.fmtMoney(rv.billed, rc.code)) +
+      ' · paid ' + S.esc(S.fmtMoney(rv.paid, rc.code)) +
+      ' · outstanding ' + S.esc(S.fmtMoney(rv.outstanding, rc.code)) +
+    '</div>';
   }
+  if(!anyRev) h += '<div style="color:#666">No revenue this month</div>';
 
-  /* Unpaid by Client */
-  var clientIdsPrint = Object.keys(rep.byClient || {});
-  var unpaidClientsPrint = [];
-  for(var upc=0; upc<clientIdsPrint.length; upc++){
-    var clP = rep.byClient[clientIdsPrint[upc]];
-    var clPHasUnpaid = false;
-    for(var ccp in clP.unpaid){
-      if(!Object.prototype.hasOwnProperty.call(clP.unpaid,ccp)) continue;
-      if(clP.unpaid[ccp] > 0.001){ clPHasUnpaid = true; break; }
-    }
-    if(clPHasUnpaid) unpaidClientsPrint.push(clP);
-  }
-  if(unpaidClientsPrint.length){
-    h += '<div class="hr"></div><b>Unpaid by Client</b>';
-    var grandUnpaidPrint = {};
-    for(var ucp=0; ucp<unpaidClientsPrint.length; ucp++){
-      var clPP = unpaidClientsPrint[ucp];
-      var partsP = [];
-      for(var cCp in clPP.unpaid){
-        if(!Object.prototype.hasOwnProperty.call(clPP.unpaid,cCp)) continue;
-        if(clPP.unpaid[cCp] <= 0.001) continue;
-        partsP.push(S.fmtMoney(clPP.unpaid[cCp], cCp));
-        if(!grandUnpaidPrint[cCp]) grandUnpaidPrint[cCp] = 0;
-        grandUnpaidPrint[cCp] += clPP.unpaid[cCp];
+  /* ---------- 3. BY EMPLOYEE ---------- */
+  h += '<div style="margin-top:12px"><b>By Employee</b></div>';
+  var empIds = Object.keys(rep.byEmployee);
+  if(!empIds.length){
+    h += '<div style="color:#666">No employee activity</div>';
+  } else {
+    for(var ei=0; ei<empIds.length; ei++){
+      var be = rep.byEmployee[empIds[ei]];
+      h += '<div style="margin-top:6px">' +
+        '<span dir="rtl" style="font-weight:700">' + S.esc(be.nameAr) + '</span>' +
+        ' — ' + S.esc(be.specialty || '—') + ' — ' + (be.pct||0) + '%' +
+      '</div>';
+      var anyCurE = false;
+      for(var eci=0; eci<activeCurs.length; eci++){
+        var ecc = activeCurs[eci];
+        var ec = be.perCur[ecc.code];
+        if(!ec || (ec.billed === 0 && ec.paid === 0)) continue;
+        anyCurE = true;
+        var unpaidE = ec.billed - ec.paid;
+        h += '<div style="font-size:13px">' + S.esc(ecc.code) +
+          ': billed ' + S.esc(S.fmtMoney(ec.billed, ecc.code)) +
+          ' · paid ' + S.esc(S.fmtMoney(ec.paid, ecc.code)) +
+          ' · unpaid ' + S.esc(S.fmtMoney(unpaidE, ecc.code)) +
+          ' · commission ' + S.esc(S.fmtMoney(ec.commission, ecc.code)) +
+        '</div>';
       }
-      h += '<div style="font-size:13px"><span dir="rtl" style="font-weight:700">'+S.esc(clPP.name)+'</span>';
-      if(clPP.phone) h += ' &nbsp; '+S.esc(clPP.phone);
-      h += ' — '+S.esc(partsP.join(' · '))+'</div>';
-    }
-    var gtPartsP = [];
-    for(var gCp in grandUnpaidPrint){
-      if(!Object.prototype.hasOwnProperty.call(grandUnpaidPrint,gCp)) continue;
-      if(grandUnpaidPrint[gCp] <= 0.001) continue;
-      gtPartsP.push(S.fmtMoney(grandUnpaidPrint[gCp], gCp));
-    }
-    if(gtPartsP.length){
-      h += '<div style="font-weight:700;margin-top:6px">Total unpaid: '+S.esc(gtPartsP.join(' · '))+'</div>';
+      if(!anyCurE) h += '<div style="font-size:13px;color:#666">No activity</div>';
     }
   }
 
-  h += '<div class="hr"></div><b>Net (per currency)</b>';
-  for(var ni=0;ni<curs.length;ni++){
-    var nc = curs[ni];
-    var rev2 = (rep.revenue[nc.code]||{}).total || 0;
-    var exp2 = (rep.expenses[nc.code]||{}).total || 0;
-    var pay2 = payrollByCur[nc.code]||0;
-    if(rev2 === 0 && exp2 === 0 && pay2 === 0) continue;
-    h += '<div>'+nc.code+': '+S.fmtMoney(rev2,nc.code)+' - '+
-         S.fmtMoney(pay2,nc.code)+' - '+S.fmtMoney(exp2,nc.code)+
-         ' = <b>'+S.fmtMoney(rev2-pay2-exp2, nc.code)+'</b></div>';
+  /* ---------- 4. PAYROLL ---------- */
+  h += '<div style="margin-top:12px"><b>Payroll</b></div>';
+  var payrollHasAny = false;
+  for(var pi=0; pi<empIds.length; pi++){
+    var pBe = rep.byEmployee[empIds[pi]];
+    var hasRow = (pBe.base > 0);
+    if(!hasRow){
+      for(var pci0=0; pci0<activeCurs.length; pci0++){
+        var pEc0 = pBe.perCur[activeCurs[pci0].code];
+        if(pEc0 && pEc0.commission > 0){ hasRow = true; break; }
+      }
+    }
+    if(!hasRow) continue;
+    payrollHasAny = true;
+    h += '<div style="margin-top:6px"><span dir="rtl" style="font-weight:700">' +
+      S.esc(pBe.nameAr) + '</span></div>';
+    if(pBe.base > 0){
+      h += '<div style="font-size:13px">Base: ' +
+        S.esc(S.fmtMoney(pBe.base, pBe.baseCurrency || 'NIS')) + '</div>';
+    }
+    for(var pci=0; pci<activeCurs.length; pci++){
+      var pcc = activeCurs[pci];
+      var pEc = pBe.perCur[pcc.code];
+      if(!pEc || pEc.commission === 0) continue;
+      h += '<div style="font-size:13px">Commission (' + (pBe.pct||0) + '%): ' +
+        S.esc(S.fmtMoney(pEc.commission, pcc.code)) + '</div>';
+    }
+  }
+  if(!payrollHasAny) h += '<div style="color:#666">No payroll this month</div>';
+
+  h += '<div style="margin-top:6px;font-weight:700">Total payroll</div>';
+  for(var pkc=0; pkc<activeCurs.length; pkc++){
+    var pkC = activeCurs[pkc];
+    var pr = rep.payrollByCur[pkC.code];
+    if(!pr || pr.total === 0) continue;
+    h += '<div>' + S.esc(pkC.code) + ': ' + S.esc(S.fmtMoney(pr.total, pkC.code)) +
+      (pr.base > 0 ? ' (base ' + S.esc(S.fmtMoney(pr.base, pkC.code)) +
+                     ' + commission ' + S.esc(S.fmtMoney(pr.commission, pkC.code)) + ')' : '') +
+    '</div>';
+  }
+
+  /* ---------- 5. EXPENSES ---------- */
+  h += '<div style="margin-top:12px"><b>Expenses</b></div>';
+  var anyExp = false;
+  for(var exi=0; exi<activeCurs.length; exi++){
+    var exc = activeCurs[exi];
+    var eTot = rep.expenses[exc.code];
+    if(!eTot || eTot.total === 0) continue;
+    anyExp = true;
+    h += '<div>' + S.esc(exc.code) +
+      ': total ' + S.esc(S.fmtMoney(eTot.total, exc.code)) +
+      ' · paid ' + S.esc(S.fmtMoney(eTot.paid, exc.code)) +
+      ' · unpaid ' + S.esc(S.fmtMoney(eTot.unpaid, exc.code)) +
+    '</div>';
+  }
+  if(!anyExp) h += '<div style="color:#666">No expenses this month</div>';
+
+  /* ---------- 6. UNPAID BY CLIENT ---------- */
+  var clientKeys = Object.keys(rep.byClient);
+  var unpaidRows = [];
+  for(var cki=0; cki<clientKeys.length; cki++){
+    var cl = rep.byClient[clientKeys[cki]];
+    for(var cy in cl.perCur){
+      if(!Object.prototype.hasOwnProperty.call(cl.perCur,cy)) continue;
+      var cc2 = cl.perCur[cy];
+      if(cc2.owed > 0.001){
+        unpaidRows.push({
+          name: cl.name,
+          phone: cl.phone,
+          currency: cy,
+          billed: cc2.billed,
+          paid: cc2.paid,
+          owed: cc2.owed,
+          lastService: cl.lastService
+        });
+      }
+    }
+  }
+  unpaidRows.sort(function(a,b){ return b.owed - a.owed; });
+
+  if(unpaidRows.length){
+    h += '<div class="printTotals" style="border-top:1px dashed #666;margin-top:12px">';
+    h += '<div style="font-weight:700;font-size:14px;margin-bottom:4px">Unpaid by Client</div>';
+    var grandUnpaid = {};
+    for(var ui=0; ui<unpaidRows.length; ui++){
+      var urow = unpaidRows[ui];
+      h += '<div style="margin-top:6px">' +
+        '<span dir="rtl" style="font-weight:700">' + S.esc(urow.name) + '</span>' +
+        (urow.phone ? ' &nbsp; ' + S.esc(urow.phone) : '') +
+      '</div>';
+      h += '<div style="font-size:13px">' +
+        S.esc(urow.currency) +
+        ' — billed ' + S.esc(S.fmtMoney(urow.billed, urow.currency)) +
+        ' · paid ' + S.esc(S.fmtMoney(urow.paid, urow.currency)) +
+        ' · <b>owed ' + S.esc(S.fmtMoney(urow.owed, urow.currency)) + '</b>' +
+      '</div>';
+      if(urow.lastService){
+        h += '<div style="font-size:12px;color:#555">Last: ' + S.esc(urow.lastService) + '</div>';
+      }
+      if(!grandUnpaid[urow.currency]) grandUnpaid[urow.currency] = 0;
+      grandUnpaid[urow.currency] += urow.owed;
+    }
+    var grandParts = [];
+    for(var gCy in grandUnpaid){
+      if(!Object.prototype.hasOwnProperty.call(grandUnpaid,gCy)) continue;
+      if(grandUnpaid[gCy] <= 0.001) continue;
+      grandParts.push(S.fmtMoney(grandUnpaid[gCy], gCy));
+    }
+    if(grandParts.length){
+      h += '<div style="margin-top:10px;padding-top:6px;border-top:1px solid #333;font-weight:700">' +
+        'TOTAL UNPAID: ' + S.esc(grandParts.join(' · ')) +
+      '</div>';
+    }
+    h += '</div>';
+  }
+
+  /* ---------- 6b. PARTIALLY PAID (cross-currency) ---------- */
+  if(rep.partiallyPaid && rep.partiallyPaid.length){
+    h += '<div style="margin-top:12px"><b>Partially Paid</b></div>';
+    h += '<div style="font-size:12px;color:#666">Paid in a currency different from the bill. No conversion — owner follows up.</div>';
+    for(var ppi=0; ppi<rep.partiallyPaid.length; ppi++){
+      var pp = rep.partiallyPaid[ppi];
+      h += '<div style="margin-top:8px">' +
+        '<span dir="rtl" style="font-weight:700">' + S.esc(pp.name) + '</span>' +
+        (pp.phone ? ' &nbsp; ' + S.esc(pp.phone) : '') +
+      '</div>';
+      h += '<div style="font-size:13px">Services: ' + S.esc(pp.services) + '</div>';
+      var billedParts = [];
+      for(var bi=0; bi<pp.billed.length; bi++){
+        billedParts.push(S.fmtMoney(pp.billed[bi].amount, pp.billed[bi].currency));
+      }
+      h += '<div style="font-size:13px">Billed: ' + S.esc(billedParts.join(' + ')) + '</div>';
+      var paidParts = [];
+      for(var pi2=0; pi2<pp.paid.length; pi2++){
+        paidParts.push(S.fmtMoney(pp.paid[pi2].amount, pp.paid[pi2].currency));
+      }
+      h += '<div style="font-size:13px">Paid: ' + S.esc(paidParts.join(' + ')) + '</div>';
+      h += '<div style="font-size:12px;color:#555">Owner to follow up for settlement</div>';
+    }
+  }
+
+  /* ---------- 7. NET (per currency) ---------- */
+  h += '<div style="margin-top:12px"><b>Net (per currency)</b></div>';
+
+  /* ---------- 7. NET (per currency) ---------- */
+  h += '<div style="margin-top:12px"><b>Net (per currency)</b></div>';
+  for(var ni=0; ni<activeCurs.length; ni++){
+    var nc = activeCurs[ni];
+    var nR = rep.currencies[nc.code];
+    if(!nR) continue;
+    h += '<div>' + S.esc(nc.code) +
+      ': ' + S.esc(S.fmtMoney(nR.billed, nc.code)) +
+      ' − ' + S.esc(S.fmtMoney(nR.payroll, nc.code)) +
+      ' − ' + S.esc(S.fmtMoney(nR.expenses, nc.code)) +
+      ' = <b>' + S.esc(S.fmtMoney(nR.net, nc.code)) + '</b>' +
+    '</div>';
   }
 
   h += '</div>';
 
-    var area = document.getElementById('printArea');
+  var area = document.getElementById('printArea');
   area.innerHTML = h;
   area.classList.remove('hidden');
   setTimeout(function(){
     window.print();
-    /* no cleanup — iOS print is async */
+    setTimeout(function(){
+      area.classList.add('hidden');
+      area.innerHTML = '';
+    }, 3000);
   }, 100);
 };
 
@@ -4069,8 +4267,10 @@ function printDaySheet(dateYmd){
   area.classList.remove('hidden');
   setTimeout(function(){
     window.print();
-    /* NOTE: no cleanup here — the print dialog is async on iOS.
-       We leave the content in place so the preview can read it. */
+    setTimeout(function(){
+      area.classList.add('hidden');
+      area.innerHTML = '';
+    }, 3000);
   }, 100);
 }
 document.getElementById('btnPrintDate').onclick = function(){
