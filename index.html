@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Salon</title>
+<title>Limage5</title>
 <style>
   :root{
     --bg:#f4f6f8; --card:#fff; --line:#d9dee3; --text:#1c2530;
@@ -109,7 +109,7 @@
   .empHeader{display:flex;flex-direction:column;align-items:center;gap:2px}
   .empHeader .nmAr{direction:rtl;font-weight:700;font-size:13px}
   .empHeader .specialty{font-size:10px;color:var(--muted)}
-  .empHeader .toggle{font-size:10px;padding:2px 6px;min-height:22px;border-radius:6px;margin-top:2px}
+  .empHeader .toggle{font-size:11px;padding:4px 12px;min-height:30px;border-radius:8px;margin-top:2px}
   .empHeader.off{opacity:.55}
 
   .calHead{display:flex;align-items:center;gap:8px;margin-bottom:8px}
@@ -294,8 +294,9 @@
   button:disabled{opacity:.45;cursor:not-allowed}
 
   /* ---- v5: layering fix (wizard is z 500) ---- */
-  .backdrop{z-index:600}
-  .toast{z-index:700}
+  /* dialogs and toasts must sit above the lock screen (800) so PIN entry works */
+  .backdrop{z-index:900}
+  .toast{z-index:950}
 
   /* ---- v5: backup banner ---- */
   #backupBanner{margin:0 0 10px}
@@ -320,6 +321,55 @@
   .remRow .remPhone{color:var(--muted)}
   .remPending{background:#fff8e1;border:1px solid #ffe082;border-radius:10px;padding:8px;
     margin:6px 0;font-size:14px}
+
+  /* ---- Limage5: owner / named employee sessions ---- */
+  .roleBadge{font-size:11px;padding:2px 8px;border-radius:10px;font-weight:700;
+    background:rgba(255,255,255,.25);color:#fff;white-space:nowrap;max-width:110px;
+    overflow:hidden;text-overflow:ellipsis}
+  .roleBadge.emp{background:#fff3e0;color:#e65100}
+  .roleBadge.own{background:#e8f5e9;color:#1b5e20}
+  .roleBadge.locked{background:#eceff1;color:#546e7a}
+  body.role-employee nav button[data-tab="clients"],
+  body.role-employee nav button[data-tab="staff"],
+  body.role-employee nav button[data-tab="services"],
+  body.role-employee nav button[data-tab="expenses"],
+  body.role-employee nav button[data-tab="monthly"],
+  body.role-employee nav button[data-tab="reports"],
+  body.role-employee nav button[data-tab="help"]{display:none !important}
+  body.role-employee #backupBanner,
+  body.role-employee #remindersPanel,
+  body.role-employee #btnPrintNext,
+  body.role-employee #calResetDefaults,
+  body.role-employee #calDebugOverrides{display:none !important}
+  body.role-employee .ownerOnly{display:none !important}
+  body.role-locked header,
+  body.role-locked nav,
+  body.role-locked main,
+  body.role-locked #moveBanner{display:none !important}
+  #lockScreen{display:none;position:fixed;inset:0;z-index:800;background:var(--bg);
+    padding:24px 16px;padding-top:calc(24px + env(safe-area-inset-top));
+    overflow-y:auto}
+  body.role-locked #lockScreen{display:block}
+  .lockBox{max-width:420px;margin:0 auto;background:#fff;border:1px solid var(--line);
+    border-radius:16px;padding:20px;box-shadow:0 4px 20px rgba(0,0,0,.06)}
+  .lockWho{display:flex;align-items:center;gap:10px;padding:12px;border:1px solid var(--line);
+    border-radius:12px;background:#fff;cursor:pointer;margin-top:8px}
+  .lockWho:active{background:#f7f9fb}
+  .lockWho .nm{font-weight:700;direction:rtl;text-align:right;flex:1}
+  .lockWho .meta{font-size:12px;color:var(--muted)}
+
+  /* ---- help tab ---- */
+  #tab-help .card{scroll-margin-top:130px}
+  .helpToc{display:flex;flex-direction:column;gap:4px}
+  .helpToc a{display:block;padding:9px 10px;border:1px solid var(--line);border-radius:10px;
+    background:#fff;color:var(--text);text-decoration:none;font-size:14px}
+  .helpToc a:active{background:#f1f3f4}
+  .helpWarn{background:#ffebee;border:1px solid #ef9a9a;color:#b71c1c;border-radius:10px;
+    padding:8px 10px;font-size:14px;margin-top:8px}
+  .helpTable{width:100%;border-collapse:collapse;font-size:13px;margin-top:4px}
+  .helpTable th,.helpTable td{border:1px solid var(--line);padding:5px 7px;text-align:left;vertical-align:top}
+  .helpTable th{background:#f7f9fb}
+  .helpTable td:not(:first-child){text-align:center}
 </style>
 </head>
 <body>
@@ -329,7 +379,7 @@
 <!-- WIZARD (first-run setup) -->
 <div id="wizard" class="hidden">
   <div class="wizBox">
-    <h1>Salon Setup</h1>
+    <h1>Limage5 Setup</h1>
     <div class="small muted">Welcome. Let's set up your salon in 4 short steps.</div>
     <div class="wizProg">
       <div class="d on" data-step="1"></div>
@@ -346,9 +396,21 @@
 </div>
 
 <header>
-  <h1 id="appTitle">Salon</h1>
+  <h1 id="appTitle">Limage5</h1>
+  <span id="roleBadge" class="roleBadge own">Owner</span>
   <button id="btnToday" class="ghost">Today</button>
+  <button id="btnRoleSwitch" class="ghost" title="Lock / switch user">🔒</button>
 </header>
+
+<!-- Limage5 lock / login screen -->
+<div id="lockScreen">
+  <div class="lockBox">
+    <h1 style="color:var(--accent);margin:0 0 4px">Limage5</h1>
+    <div class="small muted" id="lockSalonName">Salon</div>
+    <div class="hr"></div>
+    <div id="lockBody"></div>
+  </div>
+</div>
 
 <nav id="tabs">
   <button data-tab="day" class="on">Day</button>
@@ -510,6 +572,9 @@
       <div class="row" style="margin-top:8px">
         <button id="btnReminderSettings" class="grow">💬 Reminder Settings</button>
       </div>
+      <div class="row" style="margin-top:8px">
+        <button id="btnOwnerPin" class="grow">🔐 Owner PIN &amp; sessions</button>
+      </div>
     </div>
 
     <div class="card">
@@ -538,137 +603,331 @@
   </section>
 
         <section class="tab" id="tab-help">
+
     <div class="card">
-      <h2>🧙 Setup wizard (first run)</h2>
+      <h2>📖 Help — contents</h2>
+      <p class="small muted">Tap a topic to jump to it. The Help tab is visible to the owner only.</p>
+      <div class="helpToc">
+        <a href="#h-data">🛑 Your data &amp; backups</a>
+        <a href="#h-setup">🧙 First-time setup</a>
+        <a href="#h-pins">🔐 Users, PINs &amp; locking</a>
+        <a href="#h-day">📅 The Day tab</a>
+        <a href="#h-book">📞 Booking, editing, moving, copying, deleting</a>
+        <a href="#h-pay">💰 Payments</a>
+        <a href="#h-wa">💬 WhatsApp reminders</a>
+        <a href="#h-cal">🗓️ Calendar, closed days, vacations</a>
+        <a href="#h-lists">👥 Clients, Staff, Services, Expenses</a>
+        <a href="#h-reports">📊 Reports &amp; Monthly</a>
+        <a href="#h-rhythm">✅ Daily &amp; monthly routine, checks</a>
+        <a href="#h-restore">💾 Backup &amp; restore, step by step</a>
+        <a href="#h-rules">⚠ Critical rules</a>
+        <a href="#h-trouble">🛠 Troubleshooting</a>
+      </div>
+    </div>
+
+    <!-- ========================================================= DATA -->
+    <div class="card" id="h-data" style="border:3px solid #c62828;background:#fff5f5">
+      <h2 style="color:#c62828">🛑 YOUR DATA LIVES ONLY ON THIS PHONE</h2>
+      <p style="margin:6px 0"><b>There is no server and no cloud copy.</b> If Safari clears its data, or the phone is lost, reset or replaced, everything is gone: appointments, clients, payments, reports.
+      <b>The only real protection is the JSON backup file you download and keep somewhere else.</b></p>
       <ol class="help">
-        <li><b>Salon name</b> — appears in the header bar</li>
-        <li><b>Closed days</b> — tap the days your salon is closed each week (e.g. Sat + Mon). If you're open every day, tap none.</li>
-        <li><b>Currencies</b> — pick which currencies you accept (NIS, JD, USD). At least one required.</li>
+        <li><b>Download a backup every day</b>, at least before you close the salon. Reports → <b>⬇ Download JSON backup</b></li>
+        <li><b>Move the file out of the phone:</b> save it to iCloud Drive → <code>Salon Backups</code>, and also email it to yourself or AirDrop it to a Mac</li>
+        <li><b>Keep old files. Never overwrite them.</b> Every file name carries the date and time, e.g. <code>limageBK-2026-11-19-1830.json</code></li>
+        <li><b>Watch the banner at the top of the Day tab:</b> green = backed up today · yellow = 1 to 3 days ago · <span style="color:#c62828"><b>red = back up NOW</b></span></li>
+        <li><b>Once a month, test one backup:</b> open it in Files and check the <code>backupInfo</code> header at the top shows the right date and numbers</li>
+        <li><b>After any big change</b> (new staff, new prices, a long day of bookings, setting PINs) download a fresh backup</li>
+      </ol>
+      <p class="small" style="margin-top:6px"><b>The in-app safety copy ("Recover previous data") is only a last-minute undo.</b> It sits in the same Safari storage as your data, so it disappears together with it if Safari clears storage. A file you downloaded does not.</p>
+      <p class="small"><b>Privacy:</b> backup files contain your clients' names and phone numbers, your financial data and the <b>PINs in plain text</b>. Keep them in a private place and do not share them.</p>
+    </div>
+
+    <!-- ========================================================= SETUP -->
+    <div class="card" id="h-setup">
+      <h2>🧙 First-time setup</h2>
+      <p class="small"><b>Setup wizard (first run)</b></p>
+      <ol class="help">
+        <li><b>Salon name</b> — appears in the header bar and in reminder messages</li>
+        <li><b>Closed days</b> — tap the weekdays the salon is closed (e.g. Sat + Mon). Open every day? Tap none</li>
+        <li><b>Currencies</b> — pick the ones you accept (NIS, JD, USD). At least one</li>
         <li><b>Business hours</b> — opening and closing time</li>
       </ol>
-      <p class="small muted">Re-run any time from <b>Reports → Re-run Setup Wizard</b>.</p>
-    </div>
-
-    <div class="card">
-      <h2>Quick start (after setup)</h2>
+      <p class="small muted">Re-run any time from <b>Reports → Settings → Re-run Setup Wizard</b>. Your data is not erased.</p>
+      <p class="small" style="margin-top:8px"><b>Recommended order after the wizard</b></p>
       <ol class="help">
-        <li><b>Staff tab</b> — add each employee: Arabic name, specialty, salary (NIS), commission %</li>
-        <li><b>Services tab</b> — add each service and its default price + currency</li>
-        <li><b>Expenses → Categories</b> — edit the list as needed</li>
-        <li>You're ready to take bookings</li>
+        <li><b>Staff tab</b> — add each employee: Arabic name, specialty, monthly salary (NIS), commission %</li>
+        <li><b>Services tab</b> — add each service with its default price and currency. Tick <i>needs body part</i> where the app should ask for one</li>
+        <li><b>Expenses → Categories</b> — adjust the category list</li>
+        <li><b>Reports → Settings → 💬 Reminder Settings</b> — check the country code, language and message text</li>
+        <li><b>Reports → Settings → 🔐 Owner PIN &amp; sessions</b> — set <b>your owner PIN first</b>, then give each employee a PIN (see <a href="#h-pins">Users &amp; PINs</a>)</li>
+        <li><b>Download your first backup</b> and save it outside the phone</li>
       </ol>
+      <p class="small muted" style="margin-top:6px">First time on a new phone but you already have data? Do not start the wizard: on the empty first screen tap <b>Restore from backup</b> (see <a href="#h-restore">Backup &amp; restore</a>).</p>
     </div>
 
-    <div class="card">
-      <h2>Taking a booking (phone call)</h2>
+    <!-- ========================================================= PINS -->
+    <div class="card" id="h-pins" style="border-color:#e65100">
+      <h2 style="color:#e65100">🔐 Users, PINs &amp; locking</h2>
+      <p class="small">Each person unlocks the phone as themselves. Every booking, change and payment is recorded under that name. The name shows as a badge in the header (<b>Owner</b>, an employee's name, or <b>Locked</b>).</p>
+
+      <p class="small"><b>Setting it up</b></p>
+      <ol class="help">
+        <li><b>Owner PIN first:</b> Reports → Settings → <b>🔐 Owner PIN &amp; sessions</b> → enter 4–8 digits twice → Save</li>
+        <li><b>Employee PINs:</b> Staff → <b>Edit</b> the employee → <i>Login PIN</i> (4–8 digits) → Save. Staff list shows <i>🔐 PIN set</i></li>
+        <li>To remove a PIN: edit the employee (or the owner PIN screen) → <b>Clear PIN</b> → Save</li>
+      </ol>
+      <div class="helpWarn">
+        <b>⚠ Set the owner PIN FIRST.</b> The app will not let you save an employee PIN until the owner PIN exists, and will not let you clear the owner PIN while employees still have PINs. Write your owner PIN on paper and keep it somewhere safe. There is no "forgot PIN" option.
+      </div>
+
+      <p class="small" style="margin-top:10px"><b>Using it</b></p>
+      <ul class="help">
+        <li>When any PIN exists, the app starts <b>locked</b> every time it is opened or reloaded. Choose your name, enter your PIN</li>
+        <li><b>🔒 in the header</b> → Lock now / Switch user. Lock whenever you walk away so the next person signs in as themselves</li>
+        <li>Wrong PIN: nothing happens except a message; you can try again (there is no lockout)</li>
+        <li>With no PINs set at all, the app opens straight in Owner mode</li>
+      </ul>
+
+      <p class="small" style="margin-top:10px"><b>What each user can do</b></p>
+      <table class="helpTable">
+        <tr><th></th><th>Owner</th><th>Employee</th></tr>
+        <tr><td>Day and Calendar tabs</td><td>✓</td><td>✓</td></tr>
+        <tr><td>Book, edit, move, copy, delete appointments</td><td>✓</td><td>✓</td></tr>
+        <tr><td>Mark as Paid / update a payment</td><td>✓</td><td>✓</td></tr>
+        <tr><td>Clear a payment</td><td>✓</td><td>—</td></tr>
+        <tr><td>Open / close a day (Calendar)</td><td>✓</td><td>—</td></tr>
+        <tr><td>Mark an employee off for today (Day grid)</td><td>✓</td><td>—</td></tr>
+        <tr><td>Reminders panel, backup banner, Print Day</td><td>✓</td><td>—</td></tr>
+        <tr><td>Clients, Staff, Services, Expenses, Monthly, Reports, Help tabs</td><td>✓</td><td>—</td></tr>
+        <tr><td>Backup, restore, erase, settings, PINs</td><td>✓</td><td>—</td></tr>
+      </table>
+
+      <p class="small" style="margin-top:10px"><b>What gets recorded</b></p>
+      <ul class="help">
+        <li>Tap an appointment to see <i>Booked by …</i> and <i>Last change by …</i> with date and time, and, for paid ones, <i>Received by …</i> and <i>recorded by …</i></li>
+        <li>Deleting an appointment writes an entry (who, client, date, time) to a log of the last 50 deletions. It is not shown on screen, but it is stored in the backup file under <code>settings → deletedLog</code></li>
+      </ul>
+
+      <p class="small" style="margin-top:10px"><b>Be realistic about security</b></p>
+      <ul class="help">
+        <li>PINs are a <b>shared-phone convenience</b> to stop mistakes and show who did what. They are not encryption</li>
+        <li>PINs are saved in the backup file in plain text. Anyone holding a backup file can read them</li>
+        <li>A session is not remembered: closing or reloading the app locks it again</li>
+      </ul>
+    </div>
+
+    <!-- ========================================================= DAY -->
+    <div class="card" id="h-day">
+      <h2>📅 The Day tab</h2>
+      <ul class="help">
+        <li><b>Backup banner</b> (owner) — green / yellow / red, with a <b>⬇ Back up now</b> button</li>
+        <li><b>💬 Reminders panel</b> (owner) — tomorrow's clients, see <a href="#h-wa">WhatsApp reminders</a></li>
+        <li><b>Date bar ◀ ▶</b> — change the day. The line under it shows whether the day is open or closed and how many appointments it has</li>
+        <li><b>The grid</b> — one column per employee, one row per 15 minutes. Tap an <b>empty slot</b> to book. Tap an <b>appointment block</b> to open it</li>
+        <li><b>ON button under an employee's name</b> (owner) — marks them off for that day only (sick day, emergency). Tap again to bring them back. Vacations are set under Staff</li>
+        <li><b>Totals bar</b> — the day's money totals</li>
+        <li><b>+ New Appointment</b> and <b>🖨 Print Day</b> (owner) at the bottom</li>
+        <li><b>Header "Today"</b> jumps back to today</li>
+      </ul>
+    </div>
+
+    <!-- ========================================================= BOOKING -->
+    <div class="card" id="h-book">
+      <h2>📞 Taking a booking (phone call)</h2>
       <ol class="help">
         <li>Day tab → pick the date</li>
-        <li>Tap an empty slot on the grid</li>
-        <li>Pick client (or <b>+ New</b>)</li>
-        <li>Tap a service → pick employee → duration → price → <b>Add</b></li>
-        <li>Add more services if needed</li>
-        <li>Set start time and total minutes → Save</li>
+        <li>Tap an empty slot in the right employee's column (or <b>+ New Appointment</b>)</li>
+        <li>Pick the client, or <b>+ New</b> to add one</li>
+        <li>Tap a service → pick the employee → duration → price → <b>Add</b></li>
+        <li>Add more services if needed. Each starts when the previous one ends</li>
+        <li>Check the start time → <b>Save</b></li>
       </ol>
+      <p class="small muted">If the employee is busy at that time, the app refuses and tells you who and when. Always enter the client's <b>phone number</b>: reminders need it.</p>
     </div>
 
     <div class="card">
-      <h2>When the client pays (after service)</h2>
+      <h2>✏️ Editing an appointment</h2>
       <ol class="help">
-        <li>Tap the appointment on the day grid</li>
-        <li>Tap <b>💰 Mark as Paid</b></li>
-        <li>The dialog shows one line for <b>each enabled currency</b></li>
-        <li>Enter the amount received in whichever currency the client paid with</li>
-        <li>Choose <b>Cash</b> or <b>Card</b> per currency</li>
-        <li>If the payment fully settles the bill (even if the currency differs from the bill), tick <b>"This fully settles the bill"</b></li>
-        <li>Save — the block turns green with ✓</li>
+        <li>Tap the appointment → <b>Edit</b></li>
+        <li>Change client, services, employee, time or notes</li>
+        <li><b>Save</b></li>
       </ol>
-      <p class="small muted">Partial payments are OK. Tap again to update or clear.</p>
-      <p class="small"><b>Currency notes:</b> Services have a default price in NIS, but clients can pay in any enabled currency. The "Fully settled" checkbox tells the app the payment is complete even if the currency differs from the billed currency.</p>
+      <ul class="help">
+        <li>The original stays untouched until you press Save. <b>Cancel</b> loses nothing</li>
+        <li>The <b>payment</b> and the original <i>booked by / on</i> details are kept</li>
+        <li>If you change the date, time, employee or services, the WhatsApp reminder resets so you can send a new one. Changing only the notes keeps it</li>
+      </ul>
     </div>
 
     <div class="card">
-      <h2>Moving an appointment</h2>
+      <h2>🕐 Moving an appointment</h2>
       <ol class="help">
         <li>Tap the appointment → <b>🕐 Move</b></li>
-        <li>A banner appears at the bottom: <i>"Moving [client] — tap an empty slot"</i></li>
-        <li>The appointment block gets an <b>orange outline</b></li>
-        <li>Tap a new slot in the <b>same employee's column</b> → moves instantly</li>
-        <li>Tap a slot in a <b>different employee's column</b> → prompt: <i>"Reassign all services to [name]?"</i></li>
-        <li>If the target slot has a conflict → refused with a clear message</li>
-        <li>To cancel → tap <b>Cancel</b> on the banner</li>
+        <li>A banner appears at the bottom: <i>"Moving [client] — tap an empty slot"</i>, and the block gets an <b>orange outline</b></li>
+        <li>Tap a new slot in the <b>same employee's column</b> → it moves instantly</li>
+        <li>Tap a slot in a <b>different employee's column</b> → <i>"Reassign all services to [name]?"</i></li>
+        <li>If the new slot has a conflict → refused with a clear message</li>
+        <li>To cancel, tap <b>Cancel</b> on the banner</li>
       </ol>
-      <p class="small muted">You can also move to a different day: use the date bar (◀ ▶) while the banner is active.</p>
+      <p class="small muted">To move to another day, use the date bar ◀ ▶ while the banner is showing. A moved appointment's reminder resets (the time changed, so the client needs a new one).</p>
     </div>
 
     <div class="card">
-      <h2>Copying an appointment</h2>
-      <p class="small muted">Use this when a client books the same service again for a future date.</p>
+      <h2>📋 Copying an appointment</h2>
+      <p class="small muted">Use when a client books the same thing again for a later date.</p>
       <ol class="help">
         <li>Tap the appointment → <b>📋 Copy</b></li>
-        <li>A banner appears at the bottom: <i>"Copying [client] — tap an empty slot"</i></li>
-        <li>The original block gets a <b>blue outline</b></li>
-        <li>Use the date bar (◀ ▶) to navigate to the future date</li>
-        <li>Tap an empty slot in the <b>same employee's column</b> → copy is created instantly</li>
-        <li>Tap a slot in a <b>different employee's column</b> → prompt: <i>"Reassign all services to [name]?"</i></li>
-        <li>If the target slot has a conflict → refused with a clear message</li>
-        <li>To cancel → tap <b>Cancel</b> on the banner</li>
+        <li>Banner: <i>"Copying [client] — tap an empty slot"</i>; the original gets a <b>blue outline</b></li>
+        <li>Use ◀ ▶ to go to the future date</li>
+        <li>Tap an empty slot (same column, or another column to reassign)</li>
+        <li>Conflicts are refused. <b>Cancel</b> on the banner stops it</li>
       </ol>
-      <p class="small"><b>What gets copied:</b></p>
-      <ul class="help">
-        <li>Client (same person)</li>
-        <li>Services — names, durations, prices, currencies</li>
-        <li>Employees</li>
-        <li>Notes</li>
-      </ul>
-      <p class="small"><b>What does NOT get copied:</b></p>
-      <ul class="help">
-        <li><b>Payment</b> — the new appointment starts as <b>Unpaid</b></li>
-        <li>The original appointment stays exactly where it was — nothing is moved or deleted</li>
-      </ul>
+      <p class="small"><b>Copied:</b> client, services (names, durations, prices, currencies), employees, notes.</p>
+      <p class="small"><b>Not copied:</b> payment and reminder. The new appointment starts <b>Unpaid</b>, and the original stays exactly where it was.</p>
     </div>
 
     <div class="card">
-      <h2>Recording an expense</h2>
-      <ol class="help">
-        <li><b>Expenses</b> tab → <b>+ Add Expense</b></li>
-        <li>Date, category, description, amount, currency</li>
-        <li>Mark <b>Paid</b> if already paid</li>
-        <li>Save</li>
-      </ol>
+      <h2>🗑 Deleting an appointment</h2>
+      <p class="small">Tap the appointment → <b>Delete</b> → confirm. It cannot be undone from the app, and the payment on it goes with it. Deletions are logged with who did them (see <a href="#h-pins">Users &amp; PINs</a>). Your only way back is a backup, so back up before big clean-ups.</p>
     </div>
 
-    <div class="card" style="border-color:#2e7d32">
-      <h2 style="color:#2e7d32">📅 Daily rhythm — do this every day</h2>
+    <!-- ========================================================= PAYMENTS -->
+    <div class="card" id="h-pay">
+      <h2>💰 When the client pays</h2>
       <ol class="help">
-        <li>
-          <b>🖨 Print the day sheet</b><br>
-          Reports → Print day sheet → today → Print
-        </li>
-        <li>
-          <b>📄 Export the day CSV</b><br>
-          Reports → Export day CSV → today → save to iCloud
-        </li>
-        <li>
-          <b>💾 Download the JSON backup</b> — most important<br>
-          Reports → ⬇ Download JSON backup → save to iCloud
-        </li>
+        <li>Tap the appointment on the day grid</li>
+        <li>Tap <b>💰 Mark as Paid</b> (or <b>Update Payment</b> if one exists)</li>
+        <li>The dialog has one line <b>for each enabled currency</b>. Enter the amount received in the currency the client paid with</li>
+        <li>Choose <b>Cash</b> or <b>Card</b> for each amount</li>
+        <li><b>Who received the money?</b> — required. It defaults to the person signed in. Change it only if someone else is holding the cash</li>
+        <li>If the payment fully covers the bill (even in another currency), tick <b>"This fully settles the bill"</b></li>
+        <li><b>Save Payment</b>. The block turns green with ✓</li>
       </ol>
-      <p class="small"><b>Where to store files:</b></p>
+      <p class="small"><b>On the appointment sheet you will see:</b></p>
       <ul class="help">
-        <li><b>iCloud Drive</b> — Files → Move to <code>Salon Backups</code></li>
-        <li><b>Email to yourself</b> — Share → Mail</li>
-        <li><b>AirDrop</b> to a Mac</li>
+        <li>Status: <b>✓ Fully Paid</b>, <b>Partial</b> or <b>Unpaid</b></li>
+        <li><i>Paid at</i> date and time</li>
+        <li><i>💰 Received by</i> (and <i>recorded by</i> when a different person typed it in)</li>
+        <li><i>Booked by</i> and <i>Last change by</i></li>
       </ul>
+      <ul class="help">
+        <li><b>Partial payments</b> are fine. Tap again later to update the amount</li>
+        <li><b>Clear Payment</b> (owner only) removes the payment, who received it and the settled flag</li>
+        <li>You must enter an amount or tick <i>fully settles</i>, otherwise nothing is saved</li>
+      </ul>
+      <p class="small"><b>Currency notes:</b></p>
+      <ul class="help">
+        <li>Service prices have a default currency (usually NIS), but clients can pay in any enabled currency</li>
+        <li>The app <b>never converts</b> between currencies. Use <i>fully settles</i> when, say, a USD payment covers a NIS bill</li>
+        <li>Commission is a % of the <b>billed</b> amount, per currency. Salaries are in NIS only</li>
+      </ul>
+    </div>
+
+    <!-- ========================================================= WHATSAPP -->
+    <div class="card" id="h-wa" style="border-color:#2e7d32">
+      <h2 style="color:#2e7d32">💬 WhatsApp reminders</h2>
+      <p class="small">Nothing is sent automatically. The app opens WhatsApp with the message already written and <b>you press Send</b>. It is free and cannot get your number banned. Owner only.</p>
+      <ol class="help">
+        <li>The green <b>Reminders</b> panel at the top of the Day tab lists tomorrow's clients. Switch to <b>Today (upcoming)</b> for later appointments today</li>
+        <li><b>One reminder per client per day</b>, even with several appointments: the message lists all the times and services</li>
+        <li>Each row shows name · time · service · phone as <i>raw → normalized</i>. Check the normalized number</li>
+        <li>Tap <b>💬 Remind</b> → WhatsApp opens → press <b>Send</b> in WhatsApp → come back to the app</li>
+        <li>The app asks <b>"Did you send it?"</b>. <b>Yes</b> greys the row with ✓ and the time. <b>No</b> leaves it pending. <i>Open WhatsApp again</i> retries</li>
+        <li><b>Send all</b> goes through the pending clients one by one: Open WhatsApp → Send → return → confirm → next. <b>Skip</b> and <b>Stop</b> are available</li>
+        <li>A sent row has a <b>Resend</b> button (it asks to confirm first)</li>
+      </ol>
+      <p class="small"><b>Good to know</b></p>
+      <ul class="help">
+        <li>The app cannot see whether you really pressed Send. That is why it asks, and why the answer is yours</li>
+        <li>Closed day: the panel says <i>Salon is closed</i>. Employee off that day: the row shows a red ⚠ warning</li>
+        <li>No phone, or a number that cannot be used: the row says so and the button is disabled. Fix it in Clients</li>
+        <li>Moving or editing an appointment's time resets its reminder</li>
+        <li>Works offline up to the moment WhatsApp opens; WhatsApp itself needs internet</li>
+      </ul>
+      <p class="small"><b>Phone numbers</b> (country code default <code>972</code>, Israel and Palestine)</p>
+      <p class="small muted">Type <b>digits only</b>, as you would dial: <code>0599123456</code>. The phone field removes spaces, dashes and letters for you and shows the WhatsApp number underneath. A local number starting with 0 gets <code>972</code>. If a Palestinian client's WhatsApp is registered under <code>+970</code> and the reminder says "not on WhatsApp", type that client's number as <code>970599123456</code> and it is kept exactly as typed.</p>
+      <table class="helpTable">
+        <tr><th>Saved as</th><th>Sent to</th></tr>
+        <tr><td>0599123456</td><td>972599123456</td></tr>
+        <tr><td>059-912-3456 or 059 912 3456</td><td>972599123456</td></tr>
+        <tr><td>+972 59 912 3456 or 00972599123456</td><td>972599123456</td></tr>
+        <tr><td>+970 59 912 3456 or 970599123456 (Palestine code)</td><td>970599123456 (kept as typed)</td></tr>
+        <tr><td>empty or too short</td><td>"No phone" / "Invalid phone"</td></tr>
+      </table>
+      <p class="small" style="margin-top:8px"><b>Settings</b> — Reports → Settings → <b>💬 Reminder Settings</b></p>
+      <ul class="help">
+        <li><b>Default country code</b> — digits only</li>
+        <li><b>Language</b> — Arabic or English (one language per message)</li>
+        <li><b>Arabic and English templates</b> — edit freely. Placeholders: <code>{name}</code> <code>{salon}</code> <code>{date}</code> <code>{time}</code> <code>{service}</code>. A live preview is shown. <i>Reset</i> restores the standard text</li>
+      </ul>
+    </div>
+
+    <!-- ========================================================= CALENDAR -->
+    <div class="card" id="h-cal">
+      <h2>🗓️ Calendar, closed days &amp; vacations</h2>
+      <ul class="help">
+        <li><b>Calendar tab</b> — a blue dot marks days with appointments, <b>TODAY</b> is labelled</li>
+        <li>Tap a day to select it. <b>Tap the selected day again</b> to toggle open / closed (owner only; employees get a message)</li>
+        <li><b>Open selected day</b> takes you to that day on the Day tab</li>
+        <li><b>Reset to my defaults</b> clears every manual open/closed change (owner only); <b>Show day overrides</b> lists them</li>
+        <li><b>Staff → Vacation</b> — add From/To periods per employee. They show as unavailable on those days</li>
+        <li>Closed days and absent employees show in the Day banner and in the reminder panel</li>
+      </ul>
+    </div>
+
+    <!-- ========================================================= LISTS -->
+    <div class="card" id="h-lists">
+      <h2>👥 Clients, Staff, Services, Expenses</h2>
+      <ul class="help">
+        <li><b>Clients</b> — search by name or phone, <b>+ Add</b>, tap to edit. Keep phone numbers complete: reminders and reports use them</li>
+        <li><b>Staff</b> — name, specialty, salary (NIS), commission %, notes, <b>login PIN</b>, <b>Vacation</b>, Edit, Del. Deleting an employee keeps their past appointments on record</li>
+        <li><b>Services</b> — default price and currency; <i>needs body part</i> makes the app ask for one when booking</li>
+        <li><b>Expenses</b> — <b>+ Add Expense</b>: date, category, description, amount, currency, and <b>Paid</b> if already paid. Filter: This month / Last month / This year / All. <b>Categories</b> edits the list</li>
+      </ul>
+      <p class="small muted">Employees can pick a client while booking, but cannot open these tabs.</p>
+    </div>
+
+    <!-- ========================================================= REPORTS -->
+    <div class="card" id="h-reports">
+      <h2>📊 Reports &amp; Monthly</h2>
+      <p class="small"><b>Reports tab</b></p>
+      <ul class="help">
+        <li><b>📄 Export day CSV</b> — one row per service for a day, with totals and an <i>Unpaid by client</i> list. <b>Preview on screen</b> first if you like</li>
+        <li><b>🖨 Print day sheet</b> — the same, formatted for paper (tomorrow's date is pre-filled)</li>
+        <li><b>🔍 Booked-on lookup</b> — shows appointments that were <i>created</i> on a given day (useful for "what did we book today?")</li>
+        <li><b>⚙️ Settings</b> — setup wizard, reminder settings, owner PIN &amp; sessions</li>
+        <li><b>💾 Backup &amp; restore</b> — see below</li>
+      </ul>
+      <p class="small"><b>Monthly tab</b> — choose the month with ◀ ▶</p>
+      <ul class="help">
+        <li>Revenue per currency, by employee, payroll (base salary + commission), expenses, partially paid clients, and <b>Net per currency</b></li>
+        <li><b>📄 Export month CSV</b> and <b>🖨 Print month</b></li>
+      </ul>
+      <p class="small muted">The day CSV and print show Cash and Card amounts but <b>not who received</b> the money. "Received by" is on each appointment (tap it).</p>
+    </div>
+
+    <!-- ========================================================= RHYTHM -->
+    <div class="card" id="h-rhythm" style="border-color:#2e7d32">
+      <h2 style="color:#2e7d32">📅 Daily routine</h2>
+      <ol class="help">
+        <li><b>Morning:</b> unlock, check the Day tab and the reminder panel for tomorrow</li>
+        <li><b>During the day:</b> mark each payment as it happens, with the right <i>Received by</i></li>
+        <li><b>Evening — send tomorrow's reminders</b> (💬 Send all)</li>
+        <li><b>🖨 Print the day sheet</b> (Reports → Print day sheet → today)</li>
+        <li><b>📄 Export the day CSV</b> → save to iCloud</li>
+        <li><b>💾 Download the JSON backup</b> — <u>most important, never skip</u> → iCloud, and email it to yourself. The banner turns green</li>
+        <li><b>🔒 Lock the phone</b> before you leave</li>
+      </ol>
     </div>
 
     <div class="card" style="border-color:#6a1b9a">
-      <h2 style="color:#6a1b9a">🗓️ Monthly rhythm — end of month</h2>
+      <h2 style="color:#6a1b9a">🗓️ Monthly routine</h2>
       <ol class="help">
         <li>Monthly tab → correct month → <b>🖨 Print month</b></li>
         <li><b>📄 Export month CSV</b></li>
-        <li>Save both to iCloud / email</li>
-        <li>Download final JSON backup for the month → email</li>
-        <li>File the printed report physically</li>
+        <li>Save both to iCloud and email them</li>
+        <li>Download a final JSON backup for the month and keep it for good</li>
+        <li>File the printed report</li>
       </ol>
     </div>
 
@@ -676,79 +935,85 @@
       <h2>✅ Checks and balances</h2>
       <p class="small">Every day:</p>
       <ul class="help">
-        <li><b>Cash in drawer</b> should match the <code>cash</code> amount on the day sheet</li>
+        <li><b>Cash in the drawer</b> should match the <code>cash</code> amount on the day sheet</li>
         <li><b>Card terminal</b> should match the <code>card</code> amount</li>
         <li><b>Cash + card</b> should match the total <code>paid</code></li>
+        <li>If several people take cash, tap the paid appointments to see who is recorded under <i>Received by</i>. The app does not total cash per person for you</li>
       </ul>
-      <p class="small">Monthly:</p>
+      <p class="small">Every month:</p>
       <ul class="help">
-        <li>Monthly revenue = sum of daily totals</li>
+        <li>Monthly revenue = sum of the daily totals</li>
         <li>Revenue − Payroll − Expenses = Net per currency</li>
-        <li><b>Commissions are on billed amounts</b> — the full service price, whether or not the client has paid yet</li>
+        <li><b>Commissions are on billed amounts</b>, whether or not the client has paid yet</li>
       </ul>
     </div>
 
-    <div class="card" style="border-color:#c62828">
+    <!-- ========================================================= RESTORE -->
+    <div class="card" id="h-restore" style="border-color:#1565c0">
+      <h2 style="color:#1565c0">💾 Backup &amp; restore — step by step</h2>
+      <p class="small"><b>To back up</b></p>
+      <ol class="help">
+        <li>Reports → <b>⬇ Download JSON backup</b> (or the <b>Back up now</b> button in the Day banner)</li>
+        <li>Safari asks where to save: choose iCloud Drive → <code>Salon Backups</code></li>
+        <li>Also email the file to yourself or AirDrop it</li>
+        <li>Check the Day banner is green. Reports shows <i>Last backup downloaded</i> and your current counts</li>
+      </ol>
+      <p class="small"><b>What is inside a backup</b></p>
+      <ul class="help">
+        <li>The file name has the date and time: <code>limageBK-2026-11-19-1830.json</code></li>
+        <li>A <b>backupInfo</b> header repeats the exact date and time, the app version, the numbers of appointments, clients, employees and expenses, and the first and last appointment dates</li>
+        <li>Then all your data: employees, services, clients, appointments, payments, expenses, settings and PINs</li>
+      </ul>
+      <p class="small"><b>To restore (new phone, or after data loss)</b></p>
+      <ol class="help">
+        <li>Open the app in <b>Safari</b>. On an empty app, the first screen offers <b>Restore from backup</b>. Otherwise: sign in as owner → Reports → <b>⬆ Restore from JSON</b></li>
+        <li>Pick the <b>newest</b> backup file</li>
+        <li>Read the screen: the backup's date, its counts, and your current counts. A <b>red warning</b> means the backup looks older than your current data</li>
+        <li>Press <b>Restore</b>. The app first keeps a safety copy of the current data</li>
+        <li>Restoring replaces everything, including the PINs, with what was saved in the backup</li>
+      </ol>
+      <p class="small"><b>Made a mistake?</b> Reports → <b>↩ Recover previous data</b> brings back what was there before the last restore or erase. Only one safety copy is kept.</p>
+      <p class="small"><b>Updating the app or moving to a new version:</b> the data is copied forward once from the old storage (the old copy is left untouched). It only works if you open the new file <b>from the same place</b> as the old one on the same Safari. If the app shows "No saved data found", do not start over: restore your backup. <b>Download a backup before you switch versions.</b></p>
+      <p class="small muted">Old-format (v4) backup files still restore. Safari may refuse "protected storage" (Reports shows its status), which is one more reason to download backups often.</p>
+    </div>
+
+    <!-- ========================================================= RULES -->
+    <div class="card" id="h-rules" style="border-color:#c62828">
       <h2 style="color:#c62828">⚠ Critical safety rules</h2>
       <ol class="help">
-        <li><b>Never clear Safari's browsing data or cache</b> — erases all data</li>
-        <li><b>Never delete the HTML file</b></li>
-        <li><b>Back up JSON at least once a week</b> (daily is better)</li>
-        <li><b>Never restore an old JSON</b> over newer data</li>
-        <li><b>Use one browser only</b> — Safari</li>
-        <li><b>Use one device as the live salon</b></li>
+        <li><b>Download a JSON backup every day</b> and keep it outside the phone (iCloud, email, Mac). Weekly is the absolute minimum</li>
+        <li><b>Never delete old backup files.</b> Keep at least the last 30 days</li>
+        <li><b>Never clear Safari's website data, history or cache</b> for this page. It erases all your data</li>
+        <li><b>Never delete the HTML file</b>, and always open the app from the same place</li>
+        <li><b>Never restore an old backup over newer data.</b> Read the date and counts on the Restore screen first</li>
+        <li><b>Use one browser only (Safari) and one device as the live salon.</b> Two phones do not sync and will diverge</li>
+        <li><b>Set your owner PIN before any employee PIN</b>, and keep it written down somewhere safe</li>
+        <li><b>Lock the phone</b> when you step away so actions are recorded under the right name</li>
+        <li><b>Do not use Private Browsing</b>: nothing is saved there</li>
       </ol>
     </div>
 
-    <div class="card">
-      <h2>💾 Backup &amp; restore</h2>
-      <ol class="help">
-        <li>Reports → <b>⬇ Download JSON backup</b> → save to iCloud</li>
-        <li>To restore: Reports → <b>⬆ Restore from JSON</b> → pick the file → confirm</li>
-      </ol>
-      <p class="small muted">Restoring replaces everything.</p>
-    </div>
-
-    <div class="card">
-      <h2>Currency notes</h2>
+    <!-- ========================================================= TROUBLE -->
+    <div class="card" id="h-trouble">
+      <h2>🛠 Troubleshooting</h2>
       <ul class="help">
-        <li>Choose which currencies you accept in the wizard</li>
-        <li>Service prices default to NIS, but clients can pay in any enabled currency</li>
-        <li>The app never converts between currencies</li>
-        <li>Use <b>"Fully settled"</b> in the payment dialog when a non-NIS payment covers the NIS bill</li>
-        <li><b>Commission is % of billed amounts</b>, per currency</li>
-        <li>Salaries in NIS only</li>
-      </ul>
-    </div>
-
-    <div class="card" style="border-color:#2e7d32">
-      <h2 style="color:#2e7d32">💬 WhatsApp reminders</h2>
-      <ol class="help">
-        <li>The green <b>Reminders</b> panel at the top of the Day tab lists tomorrow's clients (switch to <b>Today (upcoming)</b> if needed)</li>
-        <li>One reminder per client per day, even if they have several appointments</li>
-        <li>Check the phone line: <i>raw → normalized</i></li>
-        <li>Tap <b>💬 Remind</b> → WhatsApp opens with the message ready → press <b>Send</b> in WhatsApp</li>
-        <li>Come back to the app → it asks <b>"Did you send it?"</b> → Yes marks it ✓ sent</li>
-        <li><b>Send all</b> walks through the pending clients one by one</li>
-        <li>If you move or edit an appointment's time, its reminder is reset so you can send a new one</li>
-      </ol>
-      <p class="small muted">Message text, language and country code: Reports → Settings → 💬 Reminder Settings. Nothing is sent automatically; you always press Send yourself.</p>
-    </div>
-
-    <div class="card" style="border-color:#1565c0">
-      <h2 style="color:#1565c0">🛟 Backup safety (v5)</h2>
-      <ul class="help">
-        <li>Backup file names look like <code>salon_backup_2026-11-19_00-25.json</code></li>
-        <li>Inside the file, a <b>backupInfo</b> header repeats the exact date/time and counts of appointments, clients, employees and expenses</li>
-        <li>Restore shows that header next to your current data and warns in red if the backup looks older</li>
-        <li>Before any restore or erase, the app keeps a safety copy. Reports → <b>Recover previous data</b> brings it back</li>
-        <li>The banner at the top of the Day tab turns red when the last backup is more than 3 days old</li>
-        <li>The safety copy lives in the same browser storage. Only the downloaded files protect you if Safari clears data</li>
+        <li><b>"No saved data found" on the first screen</b> — you probably opened the file from a different place, or Safari cleared storage. Do not start the wizard. Tap <b>Restore from backup</b> and pick your latest file</li>
+        <li><b>"Saved data could not be read"</b> — the app kept a copy of the unreadable data and overwrote nothing. Do not add new data. Reports → Restore from JSON with your latest backup</li>
+        <li><b>"Browser blocked saved data"</b> — follow the steps on the screen: open the file in Safari (Files → the HTML → Share → Open in Safari), turn off Private Browsing, and check Settings → Safari content blockers</li>
+        <li><b>Red backup banner</b> — download a backup now (button on the banner)</li>
+        <li><b>Forgot the owner PIN</b> — there is no reset. Try the PINs you normally use. Do <b>not</b> clear Safari data (that erases everything). If you have a backup, it still contains the PIN in plain text: open the .json file in Files and look for <code>ownerPin</code></li>
+        <li><b>Lock screen says "no PIN set yet" for Owner</b> — your data has employee PINs but no owner PIN. Tap Owner, continue, and set the owner PIN right away</li>
+        <li><b>Employee cannot see a tab</b> — by design: employees only get Day and Calendar</li>
+        <li><b>WhatsApp did not open</b> — allow pop-ups / opening links for this page in Safari settings, then tap <b>Remind</b> again. Make sure WhatsApp is installed</li>
+        <li><b>"Did you send it?" did not appear</b> — a banner in the Reminders panel asks the same thing. Answer Yes or No there</li>
+        <li><b>A reminder shows "No phone"</b> — add or fix the phone number in Clients</li>
+        <li><b>A payment looks wrong</b> — tap the appointment → Update Payment (or Clear Payment as owner) and enter it again</li>
+        <li><b>Something looks missing</b> — check the date on the Day tab and the Booked-on lookup before assuming it was lost. Then compare with your latest backup</li>
       </ul>
     </div>
 
     <div class="card center">
-      <p class="small muted">Salon app v5 — built for offline use on iPhone.<br>All data stays on this device until you export it.</p>
+      <p class="small muted">Limage5 — built for offline use on iPhone.<br>All data stays on this device until you export it.</p>
     </div>
   </section>
 
@@ -780,10 +1045,91 @@ var STORE_KEY = NEW_STORE_KEY;
 var MIGRATED_FLAG_KEY = 'salon_app_v5_migrated';
 var BACKUP_TS_KEY = 'salon_app_v5_lastbackup';
 var SNAP_KEY = 'salon_app_v5_snapshot';
-var APP_VERSION = 'v5-reminders';
+var APP_VERSION = 'Limage5';
 var FRESH_INSTALL = false;
+/* Limage5 session actor — not persisted. Who is using the phone right now.
+   role: 'owner' | 'employee' | 'locked'
+   empId: employee id when role==='employee', else null
+   name: display name for badge + audit stamps */
+var currentActor = { role: 'owner', empId: null, name: 'Owner' };
+function isOwner(){ return currentActor.role === 'owner'; }
+function isEmployee(){ return currentActor.role === 'employee'; }
+function isLocked(){ return currentActor.role === 'locked'; }
+function actorLabel(){
+  if(currentActor.role === 'owner') return 'Owner';
+  if(currentActor.role === 'employee') return currentActor.name || 'Employee';
+  return 'Locked';
+}
+/* Compact stamp stored on appointments for audit */
+function actorStamp(){
+  return {
+    role: currentActor.role === 'employee' ? 'employee' : 'owner',
+    empId: currentActor.empId || null,
+    name: actorLabel(),
+    at: Date.now()
+  };
+}
+function formatActorStamp(st){
+  if(!st) return '';
+  var who = st.name || (st.role === 'owner' ? 'Owner' : 'Employee');
+  var when = st.at ? fmtDateTimeShort(st.at) : '';
+  return who + (when ? ' · ' + when : '');
+}
+
+/* Probe whether this browser context allows localStorage.
+   SecurityError is common on file:// in some browsers, private mode, or restricted iframes. */
+window.__storageBlocked = false;
+window.__storageError = '';
+function probeStorage(){
+  try{
+    var k = '__limage5_probe__';
+    localStorage.setItem(k, '1');
+    localStorage.removeItem(k);
+    return true;
+  }catch(e){
+    window.__storageBlocked = true;
+    window.__storageError = (e && e.message) ? e.message : String(e);
+    return false;
+  }
+}
+function showStorageBlockedScreen(){
+  var body = document.getElementById('lockBody');
+  var screen = document.getElementById('lockScreen');
+  var ls = document.getElementById('lockSalonName');
+  if(ls) ls.textContent = 'Storage blocked';
+  document.body.classList.add('role-locked');
+  document.body.classList.remove('role-owner', 'role-employee');
+  if(screen) screen.style.display = 'block';
+  if(!body) return;
+  var proto = (location && location.protocol) ? location.protocol : '';
+  var isFile = (proto === 'file:');
+  body.innerHTML =
+    '<div style="font-weight:700;color:#c62828;margin-bottom:8px">⚠ Browser blocked saved data</div>' +
+    '<div class="small" style="margin-bottom:10px">Limage5 needs local storage to keep appointments on this phone. This browser context refused it' +
+      (window.__storageError ? ' (<code style="font-size:11px">'+String(window.__storageError).replace(/</g,'&lt;')+'</code>)' : '') +
+    '.</div>' +
+    '<div class="card" style="border-color:#c62828;background:#ffebee">' +
+      '<div style="font-weight:700;margin-bottom:6px">What to do (iPhone)</div>' +
+      '<ol class="help" style="margin:0;padding-left:18px">' +
+        '<li>Open the file in <b>Safari</b> (not Chrome, not a preview app).</li>' +
+        '<li>From the <b>Files</b> app → tap the HTML → Share → <b>Open in Safari</b>.</li>' +
+        '<li>Or email the file to yourself → open the attachment in Safari.</li>' +
+        '<li>Turn <b>off Private Browsing</b> for that tab.</li>' +
+        '<li>Settings → Safari → make sure content blockers are not blocking storage for this page.</li>' +
+      '</ol>' +
+    '</div>' +
+    (isFile
+      ? '<div class="card" style="margin-top:10px"><div class="small muted">You opened this as a local file (<code>file://</code>). Some browsers block storage for local files. Safari on iPhone is the supported way for offline use.</div></div>'
+      : '') +
+    '<div class="small muted" style="margin-top:12px">Do not enter salon data until storage works — nothing would be saved.</div>';
+}
 
 function migrateStorage(){
+  if(!probeStorage()){
+    /* Do not touch localStorage further in this session */
+    FRESH_INSTALL = true;
+    return;
+  }
   try{
     if(!localStorage.getItem(MIGRATED_FLAG_KEY)){
       if(!localStorage.getItem(NEW_STORE_KEY)){
@@ -794,7 +1140,9 @@ function migrateStorage(){
     }
     FRESH_INSTALL = !localStorage.getItem(NEW_STORE_KEY);
   }catch(e){
-    console.error('migrateStorage failed', e);
+    window.__storageBlocked = true;
+    window.__storageError = (e && e.message) ? e.message : String(e);
+    FRESH_INSTALL = true;
   }
 }
 migrateStorage();
@@ -890,7 +1238,8 @@ function defaultData(){
       defaultCountryCode: '972',
       reminderTemplateAr: DEFAULT_REMINDER_AR,
       reminderTemplateEn: DEFAULT_REMINDER_EN,
-      reminderLanguage: 'ar'
+      reminderLanguage: 'ar',
+      ownerPin: ''
     }
   };
 }
@@ -898,6 +1247,9 @@ function defaultData(){
 var DB = loadDB();
 
 function loadDB(){
+  if(window.__storageBlocked){
+    return defaultData();
+  }
   try{
     var raw = localStorage.getItem(STORE_KEY);
     if(!raw) return defaultData();
@@ -923,7 +1275,8 @@ function loadDB(){
       defaultCountryCode: (String(s.defaultCountryCode || '').replace(/\D/g,'')) || defs.settings.defaultCountryCode,
       reminderTemplateAr: s.reminderTemplateAr || defs.settings.reminderTemplateAr,
       reminderTemplateEn: s.reminderTemplateEn || defs.settings.reminderTemplateEn,
-      reminderLanguage: (s.reminderLanguage === 'en') ? 'en' : 'ar'
+      reminderLanguage: (s.reminderLanguage === 'en') ? 'en' : 'ar',
+      ownerPin: (s.ownerPin != null) ? String(s.ownerPin) : ''
     };
     /* Migrate services */
     for(var i=0;i<d.services.length;i++){
@@ -959,7 +1312,13 @@ function loadDB(){
     }
     return d;
   }catch(e){
-    console.error('loadDB failed', e);
+    /* SecurityError (storage blocked) vs corrupt JSON */
+    var msg = (e && e.message) ? e.message : String(e);
+    if(/insecure|SecurityError|access is denied|quota/i.test(msg) || (e && e.name === 'SecurityError')){
+      window.__storageBlocked = true;
+      window.__storageError = msg;
+      return defaultData();
+    }
     /* Never let a read problem lead to overwriting the stored data:
        keep a copy of the unreadable text under another key. */
     try{
@@ -974,8 +1333,20 @@ function loadDB(){
   }
 }
 function saveDB(){
+  if(window.__storageBlocked){
+    toast('Storage blocked — nothing saved');
+    return;
+  }
   try{ localStorage.setItem(STORE_KEY, JSON.stringify(DB)); }
-  catch(e){ toast('Save failed: '+e.message); }
+  catch(e){
+    var msg = (e && e.message) ? e.message : String(e);
+    if(/insecure|SecurityError|access is denied/i.test(msg) || (e && e.name === 'SecurityError')){
+      window.__storageBlocked = true;
+      window.__storageError = msg;
+      try{ showStorageBlockedScreen(); }catch(e3){}
+    }
+    toast('Save failed: '+msg);
+  }
 }
 
 var toastTimer=null;
@@ -1181,6 +1552,14 @@ function confirmDialog(msg, onYes){
 }
 
 function showTab(name){
+  if(typeof isLocked === 'function' && isLocked()) return;
+  /* Employee mode: only Day and Calendar */
+  if(typeof isEmployee === 'function' && isEmployee()){
+    if(name !== 'day' && name !== 'calendar'){
+      name = 'day';
+      toast('Employee mode — Day & Calendar only');
+    }
+  }
   var tabs = document.querySelectorAll('nav button');
   for(var i=0;i<tabs.length;i++) tabs[i].classList.toggle('on', tabs[i].dataset.tab === name);
   var secs = document.querySelectorAll('section.tab');
@@ -1351,9 +1730,228 @@ document.getElementById('wizNext').onclick = function(){
 };
 
 function applySettingsToUI(){
-  document.getElementById('appTitle').textContent = DB.settings.salonName || 'Salon';
-  document.title = (DB.settings.salonName || 'Salon');
+  var name = DB.settings.salonName || 'Limage5';
+  document.getElementById('appTitle').textContent = name;
+  document.title = name + ' — Limage5';
+  var ls = document.getElementById('lockSalonName');
+  if(ls) ls.textContent = name;
+  applyRoleUI();
 }
+
+/* ============================================================
+   Limage5 — NAMED SESSIONS (owner + per-employee PINs)
+   Owner: full app. Employee: Day/Calendar, book, move, copy, delete,
+   mark payments. Every action is stamped with who did it.
+   Payment always records who received the money.
+   ============================================================ */
+function anyPinConfigured(){
+  if((DB.settings.ownerPin || '').trim()) return true;
+  for(var i=0;i<DB.employees.length;i++){
+    if((DB.employees[i].pin || '').trim()) return true;
+  }
+  return false;
+}
+function employeesWithPin(){
+  var out = [];
+  for(var i=0;i<DB.employees.length;i++){
+    if((DB.employees[i].pin || '').trim()) out.push(DB.employees[i]);
+  }
+  return out;
+}
+
+function applyRoleUI(){
+  var body = document.body;
+  body.classList.remove('role-owner', 'role-employee', 'role-locked');
+  if(currentActor.role === 'locked') body.classList.add('role-locked');
+  else if(currentActor.role === 'employee') body.classList.add('role-employee');
+  else body.classList.add('role-owner');
+
+  var badge = document.getElementById('roleBadge');
+  if(badge){
+    if(currentActor.role === 'locked'){
+      badge.textContent = 'Locked';
+      badge.className = 'roleBadge locked';
+    } else if(currentActor.role === 'employee'){
+      badge.textContent = currentActor.name || 'Employee';
+      badge.className = 'roleBadge emp';
+    } else {
+      badge.textContent = 'Owner';
+      badge.className = 'roleBadge own';
+    }
+  }
+  var sw = document.getElementById('btnRoleSwitch');
+  if(sw){
+    if(currentActor.role === 'locked'){
+      sw.textContent = '🔓';
+      sw.title = 'Unlock';
+    } else {
+      sw.textContent = '🔒';
+      sw.title = 'Lock / switch user';
+    }
+  }
+  if(currentActor.role === 'employee'){
+    var on = document.querySelector('nav button.on');
+    if(on){
+      var t = on.dataset.tab;
+      if(t !== 'day' && t !== 'calendar') showTab('day');
+    }
+  }
+  if(currentActor.role === 'locked'){
+    renderLockScreen();
+  }
+  if(window.renderDay) try{ window.renderDay(); }catch(e){}
+  if(window.renderRemindersPanel) try{ window.renderRemindersPanel(); }catch(e){}
+  if(window.renderBackupBanner) try{ window.renderBackupBanner(); }catch(e){}
+}
+
+function setActor(actor){
+  currentActor = actor || { role: 'owner', empId: null, name: 'Owner' };
+  applyRoleUI();
+  if(currentActor.role === 'locked'){
+    toast('Locked');
+  } else if(currentActor.role === 'employee'){
+    toast('Signed in: ' + (currentActor.name || 'Employee'));
+  } else {
+    toast('Owner mode');
+  }
+}
+
+function lockSession(){
+  setActor({ role: 'locked', empId: null, name: '' });
+}
+
+function renderLockScreen(){
+  var body = document.getElementById('lockBody');
+  if(!body) return;
+  var emps = employeesWithPin();
+  var hasOwnerPin = !!(DB.settings.ownerPin || '').trim();
+  var html = '<div style="font-weight:700;margin-bottom:4px">Who is using the phone?</div>' +
+    '<div class="small muted" style="margin-bottom:10px">Choose your name and enter your PIN. All bookings, changes and payments will be recorded under that name.</div>';
+
+  if(true){ /* owner entry is always offered, so the owner can never be locked out */
+    html += '<div class="lockWho" id="lockOwner">' +
+      '<div class="grow"><div style="font-weight:700">Owner</div>' +
+      '<div class="meta">Full access'+(hasOwnerPin?'':' · <span style="color:#c62828">no PIN set yet</span>')+'</div></div>' +
+      '<div>›</div></div>';
+  }
+  if(emps.length){
+    for(var i=0;i<emps.length;i++){
+      var e = emps[i];
+      html += '<div class="lockWho" data-emp-login="'+e.id+'">' +
+        '<div class="grow"><div class="nm">'+esc(e.nameAr)+'</div>' +
+        '<div class="meta">'+esc(e.specialty||'Employee')+' · booking + payments</div></div>' +
+        '<div>›</div></div>';
+    }
+  } else if(hasOwnerPin){
+    html += '<div class="small muted" style="margin-top:12px">No employees have a PIN yet. Owner can set PINs under Staff.</div>';
+  }
+  if(!anyPinConfigured()){
+    html += '<div class="card" style="margin-top:12px;border-color:#1565c0;background:#f3f8ff">' +
+      '<div class="small">No PINs set. Tap Owner to continue, then set an owner PIN and employee PINs under Staff / Settings.</div></div>';
+  }
+  body.innerHTML = html;
+
+  var ow = document.getElementById('lockOwner');
+  if(ow) ow.onclick = function(){ promptPinLogin('owner', null); };
+  var nodes = body.querySelectorAll('[data-emp-login]');
+  for(var j=0;j<nodes.length;j++){
+    (function(el){
+      el.onclick = function(){ promptPinLogin('employee', el.dataset.empLogin); };
+    })(nodes[j]);
+  }
+}
+
+function promptPinLogin(kind, empId){
+  var title, expected, successActor;
+  if(kind === 'owner'){
+    title = 'Owner PIN';
+    expected = String(DB.settings.ownerPin || '').replace(/\D/g,'');
+    successActor = { role: 'owner', empId: null, name: 'Owner' };
+  } else {
+    var e = empById(empId);
+    if(!e){ toast('Employee not found'); return; }
+    title = 'PIN — ' + e.nameAr;
+    expected = String(e.pin || '').replace(/\D/g,'');
+    successActor = { role: 'employee', empId: e.id, name: e.nameAr };
+  }
+  /* No PIN required (first run / owner with empty pin) */
+  if(!expected){
+    if(kind === 'owner' && anyPinConfigured()){
+      openSheet(
+        '<h2>No owner PIN is set</h2>' +
+        '<p>Employees already have PINs, but the owner has none, so <b>anyone</b> can enter as Owner right now.</p>' +
+        '<p class="small muted">Continue, then set your owner PIN: Reports → Settings → 🔐 Owner PIN &amp; sessions.</p>' +
+        '<div class="row" style="margin-top:12px">' +
+          '<button class="grow" id="noPinNo">Cancel</button>' +
+          '<button class="primary grow" id="noPinYes">Continue as Owner</button>' +
+        '</div>'
+      );
+      document.getElementById('noPinNo').onclick = function(){ document.getElementById('sheetClose').click(); };
+      document.getElementById('noPinYes').onclick = function(){
+        document.getElementById('sheetClose').click();
+        setActor(successActor);
+      };
+      return;
+    }
+    setActor(successActor);
+    return;
+  }
+  openSheet(
+    '<h2>'+esc(title)+'</h2>' +
+    '<p class="small muted">Enter your PIN to continue. Actions will be recorded under this name.</p>' +
+    '<label>PIN</label>' +
+    '<input id="loginPin" type="password" inputmode="numeric" maxlength="8" autocomplete="off" placeholder="PIN">' +
+    '<div class="row" style="margin-top:12px">' +
+      '<button class="grow" id="loginCancel">Cancel</button>' +
+      '<button class="primary grow" id="loginOk">Unlock</button>' +
+    '</div>'
+  );
+  var pinEl = document.getElementById('loginPin');
+  pinEl.focus();
+  function tryLogin(){
+    var entered = (pinEl.value || '').replace(/\D/g,'');
+    if(entered !== expected){ toast('Wrong PIN'); pinEl.value=''; pinEl.focus(); return; }
+    document.getElementById('sheetClose').click();
+    setActor(successActor);
+  }
+  document.getElementById('loginCancel').onclick = function(){ document.getElementById('sheetClose').click(); };
+  document.getElementById('loginOk').onclick = tryLogin;
+  pinEl.onkeydown = function(ev){ if(ev.key === 'Enter') tryLogin(); };
+}
+
+function openRoleSwitch(){
+  if(currentActor.role === 'locked'){
+    renderLockScreen();
+    return;
+  }
+  /* Currently signed in → offer lock or switch */
+  openSheet(
+    '<h2>Session</h2>' +
+    '<div class="card"><div><b>Signed in as:</b> '+esc(actorLabel())+'</div>' +
+    '<div class="small muted" style="margin-top:4px">Lock when you walk away so the next person signs in as themselves.</div></div>' +
+    '<div class="row" style="margin-top:12px">' +
+      '<button class="primary grow" id="sessLock">🔒 Lock now</button>' +
+    '</div>' +
+    '<div class="row" style="margin-top:8px">' +
+      '<button class="grow" id="sessSwitch">Switch user</button>' +
+      '<button class="grow" id="sessCancel">Stay</button>' +
+    '</div>'
+  );
+  document.getElementById('sessLock').onclick = function(){
+    document.getElementById('sheetClose').click();
+    lockSession();
+  };
+  document.getElementById('sessSwitch').onclick = function(){
+    document.getElementById('sheetClose').click();
+    lockSession();
+  };
+  document.getElementById('sessCancel').onclick = function(){ document.getElementById('sheetClose').click(); };
+}
+
+(function(){
+  var btn = document.getElementById('btnRoleSwitch');
+  if(btn) btn.onclick = openRoleSwitch;
+})();
 
 /* ============================================================
    CALENDAR
@@ -1412,6 +2010,10 @@ function renderCalendar(){
       cell.addEventListener('click', function(){
         var d = cell.dataset.date;
         if(selectedDate === d){
+          if(typeof isOwner === 'function' && !isOwner()){
+            toast('Only owner can open/close days');
+            return;
+          }
           setSalonClosed(d, !isSalonClosed(d));
         } else {
           selectedDate = d;
@@ -1478,12 +2080,14 @@ function renderStaff(){
     var comm = Number(e.commissionPct)||0;
     var salaryTxt = (salary > 0) ? fmtMoney(salary, 'NIS') + ' / month' : 'no salary';
     var commTxt = (comm > 0) ? comm + '% commission' : 'no commission';
+    var pinTxt = (e.pin || '').trim() ? '🔐 PIN set' : 'no login PIN';
     html +=
       '<div class="listRow">' +
         '<div class="grow">' +
           '<div class="nmAr">'+esc(e.nameAr)+'</div>' +
           '<div class="meta">'+esc(e.specialty||'—')+'</div>' +
           '<div class="meta">'+esc(salaryTxt)+' · '+esc(commTxt)+'</div>' +
+          '<div class="meta">'+esc(pinTxt)+'</div>' +
           ((e.vacations||[]).length ? '<div class="meta">'+(e.vacations||[]).length+' vacation period(s)</div>' : '') +
           (e.notes ? '<div class="small muted" style="margin-top:2px">'+esc(e.notes)+'</div>' : '') +
         '</div>' +
@@ -1507,8 +2111,9 @@ function editEmployee(id){
   var e = id ? empById(id) : {
     nameAr:'', specialty:'',
     baseSalary: 0, salaryCurrency: 'NIS',
-    commissionPct: 0, notes: ''
+    commissionPct: 0, notes: '', pin: ''
   };
+  var hasPin = !!(e.pin || '').trim();
   openSheet(
     '<h2>'+(id?'Edit':'Add')+' Employee</h2>' +
     '<label>Arabic name</label>' +
@@ -1520,14 +2125,22 @@ function editEmployee(id){
     '<input id="empSalary" type="number" min="0" step="0.01" value="'+(e.baseSalary||0)+'" inputmode="decimal">' +
     '<label>Commission % on paid revenue</label>' +
     '<input id="empCommission" type="number" min="0" max="100" step="0.1" value="'+(e.commissionPct||0)+'" inputmode="decimal">' +
-    '<div class="small muted" style="margin-top:-4px">Example: 20 for 20%. Applies to paid amounts only.</div>' +
+    '<div class="small muted" style="margin-top:-4px">Example: 20 for 20%. Applies to billed amounts.</div>' +
     '<label>Notes (optional)</label>' +
     '<input id="empNotes" value="'+esc(e.notes||'')+'" placeholder="e.g. joined Jan 2025">' +
+    '<div class="hr"></div>' +
+    '<label>Login PIN (4–8 digits)'+(hasPin?' · currently set':'')+'</label>' +
+    '<input id="empPin" type="password" inputmode="numeric" maxlength="8" autocomplete="off" placeholder="'+(hasPin?'leave blank to keep current':'set so they can sign in')+'">' +
+    '<div class="small muted">With a PIN they can unlock the phone as themselves. Bookings, schedule changes and payments are recorded under their name.</div>' +
+    (hasPin ? '<div class="row" style="margin-top:6px"><button class="danger small" id="empClearPin">Clear PIN</button></div>' : '') +
     '<div class="row" style="margin-top:12px">' +
       '<button class="grow" id="empCancel">Cancel</button>' +
       '<button class="primary grow" id="empSave">Save</button>' +
     '</div>'
   );
+  var clearPin = false;
+  var clr = document.getElementById('empClearPin');
+  if(clr) clr.onclick = function(){ clearPin = true; toast('PIN will be cleared on Save'); };
   document.getElementById('empCancel').onclick = function(){ document.getElementById('sheetClose').click(); };
   document.getElementById('empSave').onclick = function(){
     var nameAr = document.getElementById('empName').value.trim();
@@ -1535,9 +2148,15 @@ function editEmployee(id){
     var salary = Number(document.getElementById('empSalary').value)||0;
     var comm = Number(document.getElementById('empCommission').value)||0;
     var notes = document.getElementById('empNotes').value;
+    var pinRaw = (document.getElementById('empPin').value || '').replace(/\D/g,'');
     if(!nameAr){ toast('Name required'); return; }
     if(comm < 0) comm = 0;
     if(comm > 100) comm = 100;
+    if(pinRaw && (pinRaw.length < 4 || pinRaw.length > 8)){ toast('PIN must be 4–8 digits'); return; }
+    if(pinRaw && !(DB.settings.ownerPin || '').trim()){
+      toast('Set the Owner PIN first (Reports → Settings → Owner PIN)');
+      return;
+    }
     if(id){
       var emp = empById(id);
       emp.nameAr = nameAr;
@@ -1546,11 +2165,14 @@ function editEmployee(id){
       emp.salaryCurrency = 'NIS';
       emp.commissionPct = comm;
       emp.notes = notes;
+      if(clearPin) emp.pin = '';
+      else if(pinRaw) emp.pin = pinRaw;
     } else {
       DB.employees.push({
         id: uid(), nameAr:nameAr, specialty:spec, vacations:[],
         baseSalary: salary, salaryCurrency: 'NIS',
-        commissionPct: comm, notes: notes
+        commissionPct: comm, notes: notes,
+        pin: pinRaw || ''
       });
     }
     saveDB();
@@ -2443,6 +3065,66 @@ document.getElementById('btnReRunSetup').onclick = function(){
   });
 };
 
+/* Owner PIN management (Reports → Settings) */
+document.getElementById('btnOwnerPin').onclick = function(){
+  var hasPin = !!(DB.settings.ownerPin || '').trim();
+  var empPins = employeesWithPin().length;
+  openSheet(
+    '<h2>🔐 Owner PIN &amp; sessions</h2>' +
+    '<div class="small muted">Each person unlocks with their own PIN. Bookings, schedule changes and payments are recorded under that name.</div>' +
+    '<div class="card" style="margin-top:8px">' +
+      '<div><b>Signed in as:</b> ' + esc(actorLabel()) + '</div>' +
+      '<div class="small muted" style="margin-top:4px">Owner PIN: ' + (hasPin ? 'set' : '<span style="color:#c62828">not set</span>') +
+        ' · Employee PINs set: ' + empPins + '</div>' +
+    '</div>' +
+    '<label>Owner PIN (4–8 digits)</label>' +
+    '<input id="opPin1" type="password" inputmode="numeric" maxlength="8" autocomplete="off" placeholder="'+(hasPin?'leave blank to keep current':'set a PIN')+'">' +
+    '<label>Confirm owner PIN</label>' +
+    '<input id="opPin2" type="password" inputmode="numeric" maxlength="8" autocomplete="off">' +
+    (hasPin ? '<div class="row" style="margin-top:8px"><button class="danger grow small" id="opClear">Clear owner PIN</button></div>' : '') +
+    '<div class="small muted" style="margin-top:8px">Employee PINs are set under <b>Staff → Edit</b> for each person.</div>' +
+    '<div class="row" style="margin-top:12px">' +
+      '<button class="grow" id="opCancel">Close</button>' +
+      '<button class="primary grow" id="opSave">Save owner PIN</button>' +
+    '</div>' +
+    '<div class="row" style="margin-top:8px">' +
+      '<button class="grow" id="opLock">🔒 Lock now</button>' +
+    '</div>'
+  );
+  document.getElementById('opCancel').onclick = function(){ document.getElementById('sheetClose').click(); };
+  document.getElementById('opSave').onclick = function(){
+    var a = (document.getElementById('opPin1').value || '').replace(/\D/g,'');
+    var b = (document.getElementById('opPin2').value || '').replace(/\D/g,'');
+    if(!a){
+      if(hasPin){ toast('Current PIN kept'); document.getElementById('sheetClose').click(); return; }
+      toast('Enter a PIN'); return;
+    }
+    if(a.length < 4 || a.length > 8){ toast('PIN must be 4–8 digits'); return; }
+    if(a !== b){ toast('PINs do not match'); return; }
+    DB.settings.ownerPin = a;
+    saveDB();
+    document.getElementById('sheetClose').click();
+    toast('Owner PIN saved');
+  };
+  var clr = document.getElementById('opClear');
+  if(clr) clr.onclick = function(){
+    if(employeesWithPin().length){
+      toast('Clear the employee PINs first, or keep the owner PIN');
+      return;
+    }
+    confirmDialog('Clear the owner PIN?', function(){
+      DB.settings.ownerPin = '';
+      saveDB();
+      document.getElementById('sheetClose').click();
+      toast('PIN cleared');
+    });
+  };
+  document.getElementById('opLock').onclick = function(){
+    document.getElementById('sheetClose').click();
+    lockSession();
+  };
+};
+
 document.getElementById('dayDate').value = selectedDate;
 document.getElementById('bookedOnDate').value = todayYmd();
 document.getElementById('printDate').value = addDays(todayYmd(), 1);
@@ -2477,17 +3159,33 @@ window.__salon = {
   monthLabel: monthLabel, monthRange: monthRange,
   get monYear(){ return monYear; },
   get monMonth(){ return monMonth; },
-  showWizard: showWizard, applySettingsToUI: applySettingsToUI
+  showWizard: showWizard, applySettingsToUI: applySettingsToUI,
+  isOwner: isOwner, isEmployee: isEmployee, isLocked: isLocked,
+  actorLabel: actorLabel, actorStamp: actorStamp, formatActorStamp: formatActorStamp,
+  lockSession: lockSession, setActor: setActor, applyRoleUI: applyRoleUI,
+  get currentActor(){ return currentActor; }
 };
 
 /* Apply settings to header */
 applySettingsToUI();
 
-/* If setup hasn't run, show wizard; otherwise show the app */
-if(!DB.settings.setupDone){
+/* Storage blocked → stop here; do not run wizard or enter data */
+if(window.__storageBlocked){
+  try{ showStorageBlockedScreen(); }catch(e){}
+} else if(!DB.settings.setupDone){
+  /* First run setup */
+  currentActor = { role: 'owner', empId: null, name: 'Owner' };
   showWizard();
 } else {
-  showTab('day');
+  /* When any PIN is configured, start locked so the next person
+     must sign in as themselves (owner or named employee). */
+  if(anyPinConfigured()){
+    currentActor = { role: 'locked', empId: null, name: '' };
+  } else {
+    currentActor = { role: 'owner', empId: null, name: 'Owner' };
+  }
+  applyRoleUI();
+  if(!isLocked()) showTab('day');
 }
 </script>
 
@@ -2649,6 +3347,10 @@ function renderDay(){
     (function(b){
       b.addEventListener('click', function(e){
         e.stopPropagation();
+        if(typeof isOwner === 'function' && !isOwner()){
+          S.toast('Only owner can mark employee off');
+          return;
+        }
         S.toggleEmpEmergency(b.dataset.empToggle, dateYmd);
         renderDay();
       });
@@ -2943,6 +3645,7 @@ function openBooking(initial){
     var c = S.clientById(draft.clientId) || {};
     var totalMin = 0;
     for(var t=0;t<placed.length;t++) totalMin += placed[t].durationMin;
+    var stamp = (typeof actorStamp === 'function') ? actorStamp() : { role:'owner', empId:null, name:'Owner', at:Date.now() };
     var newAppt = {
       id: S.uid(),
       date: draft.date,
@@ -2954,7 +3657,9 @@ function openBooking(initial){
       startMin: placed[0].startMin,
       notes: draft.notes || '',
       bookedOn: S.todayYmd(),
-      bookedAt: Date.now()
+      bookedAt: Date.now(),
+      bookedBy: stamp,
+      lastChangedBy: stamp
     };
     var apptList = DB().appointments;
     var oldIdx = -1;
@@ -2967,11 +3672,15 @@ function openBooking(initial){
       newAppt.id = oldA.id;
       if(oldA.bookedOn) newAppt.bookedOn = oldA.bookedOn;
       if(oldA.bookedAt) newAppt.bookedAt = oldA.bookedAt;
+      if(oldA.bookedBy) newAppt.bookedBy = oldA.bookedBy;
       if(oldA.paid) newAppt.paid = oldA.paid;
       if(oldA.paidAt) newAppt.paidAt = oldA.paidAt;
+      if(oldA.paidBy) newAppt.paidBy = oldA.paidBy;
+      if(oldA.receivedBy) newAppt.receivedBy = oldA.receivedBy;
       if(oldA.fullySettled) newAppt.fullySettled = oldA.fullySettled;
       /* A reminder stays "sent" only if date, time, employees and services are unchanged. */
       if(oldA.reminderSentAt && sameSchedule(oldA, newAppt)) newAppt.reminderSentAt = oldA.reminderSentAt;
+      newAppt.lastChangedBy = stamp;
       apptList[oldIdx] = newAppt;
     } else {
       apptList.push(newAppt);
@@ -3007,7 +3716,7 @@ function openApptActions(apptId){
     svcList += '<div class="pickedItem"><div class="grow">' +
       S.esc(s.name) + (s.bodyPart ? ' <span class="muted">('+S.esc(s.bodyPart)+')</span>' : '') +
       ' — <span class="ar">'+S.esc(e?e.nameAr:'?')+'</span> · ' +
-      S.fmtHM(s.startMin)+'–'+S.fmtHM(s.startMin+s.durationMin) +
+      '<span dir="ltr" style="unicode-bidi:isolate">'+S.fmtHM(s.startMin)+'–'+S.fmtHM(s.startMin+s.durationMin)+'</span>' +
       ' · <span class="money">'+S.esc(priceTxt)+'</span>' +
       '</div></div>';
   }
@@ -3046,10 +3755,28 @@ function openApptActions(apptId){
   if(a.paidAt){
     payTimestamp = '<div class="small muted" style="margin-top:4px">Paid at '+S.esc(S.fmtDateTimeShort(a.paidAt))+'</div>';
   }
+  if(a.receivedBy && a.receivedBy.name){
+    payTimestamp += '<div class="small" style="margin-top:2px;color:#1b5e20">💰 Received by <b dir="rtl">'+S.esc(a.receivedBy.name)+'</b>' +
+      (a.paidBy && a.paidBy.name && a.paidBy.name !== a.receivedBy.name
+        ? ' · recorded by '+S.esc(a.paidBy.name) : '') +
+      '</div>';
+  } else if(a.paidBy && a.paidBy.name){
+    payTimestamp += '<div class="small" style="margin-top:2px">Recorded by '+S.esc(a.paidBy.name)+'</div>';
+  }
   if(a.fullySettled){
-    payTimestamp += '<div class="small" style="margin-top:4px;color:#2e7d32">✓ Marked as fully settled by owner</div>';
+    payTimestamp += '<div class="small" style="margin-top:4px;color:#2e7d32">✓ Marked as fully settled</div>';
   }
 
+  var auditLines = '';
+  if(a.bookedBy && a.bookedBy.name){
+    auditLines += '<div class="small muted">Booked by '+S.esc(formatActorStamp(a.bookedBy))+'</div>';
+  }
+  if(a.lastChangedBy && a.lastChangedBy.name){
+    auditLines += '<div class="small muted">Last change by '+S.esc(formatActorStamp(a.lastChangedBy))+'</div>';
+  }
+
+  var canPay = (typeof isOwner === 'function' ? isOwner() : true) || (typeof isEmployee === 'function' && isEmployee());
+  var canClearPay = (typeof isOwner === 'function') ? isOwner() : true;
   var html =
     '<h2>Appointment</h2>' +
     '<div class="small muted">'+S.esc(S.fmtDateLong(a.date))+'</div>' +
@@ -3064,12 +3791,19 @@ function openApptActions(apptId){
       (a.notes ? '<div class="hr"></div><div class="small"><b>Notes:</b> '+S.esc(a.notes)+'</div>' : '') +
       '<div class="hr"></div>' +
       '<div class="small muted">Booked on '+S.esc(a.bookedOn||'—')+'</div>' +
-    '</div>' +
+      auditLines +
+    '</div>';
+  if(canPay){
+    html +=
+      '<div class="row" style="margin-top:8px">' +
+        '<button class="primary grow" id="aPay">💰 '+(a.paid ? 'Update Payment' : 'Mark as Paid')+'</button>' +
+      '</div>';
+  }
+  if(canClearPay && a.paid){
+    html += '<div class="row" style="margin-top:6px"><button class="danger grow small" id="aClearPay">Clear Payment</button></div>';
+  }
+  html +=
     '<div class="row" style="margin-top:8px">' +
-      '<button class="primary grow" id="aPay">💰 '+(a.paid ? 'Update Payment' : 'Mark as Paid')+'</button>' +
-    '</div>' +
-    (a.paid ? '<div class="row" style="margin-top:6px"><button class="danger grow small" id="aClearPay">Clear Payment</button></div>' : '') +
-            '<div class="row" style="margin-top:8px">' +
       '<button class="primary grow" id="aMove">🕐 Move</button>' +
       '<button class="primary grow" id="aCopy">📋 Copy</button>' +
     '</div>' +
@@ -3089,23 +3823,25 @@ function openApptActions(apptId){
     startCopyMode(apptId);
   };
 
-    document.getElementById('aClose').onclick = function(){ document.getElementById('sheetClose').click(); };
-  document.getElementById('aPay').onclick = function(){
-    paymentSheet(a, function(){
-      /* paymentSheet already closed the sheet.
-         Give iOS a moment, then re-render the grid. */
-      setTimeout(function(){
-        renderDay();
-        /* Now reopen the detail sheet with fresh data from DB */
-        openApptActions(apptId);
-      }, 80);
-    });
-  };
+  document.getElementById('aClose').onclick = function(){ document.getElementById('sheetClose').click(); };
+  var payBtn = document.getElementById('aPay');
+  if(payBtn){
+    payBtn.onclick = function(){
+      paymentSheet(a, function(){
+        setTimeout(function(){
+          renderDay();
+          openApptActions(apptId);
+        }, 80);
+      });
+    };
+  }
   var clrBtn = document.getElementById('aClearPay');
   if(clrBtn){
     clrBtn.onclick = function(){
       S.confirmDialog('Clear the recorded payment for this appointment?', function(){
         delete a.paid; delete a.paidAt; delete a.fullySettled;
+        delete a.paidBy; delete a.receivedBy;
+        if(typeof actorStamp === 'function') a.lastChangedBy = actorStamp();
         saveDB();
         setTimeout(function(){
           renderDay();
@@ -3121,12 +3857,28 @@ function openApptActions(apptId){
       var list = DB().appointments;
       for(var x=0;x<list.length;x++) if(list[x].id!==apptId) out.push(list[x]);
       DB().appointments = out;
+      /* Soft audit: keep a short deleted log on settings (last 50) */
+      try{
+        var st = (typeof actorStamp === 'function') ? actorStamp() : null;
+        DB().settings = DB().settings || {};
+        var log = DB().settings.deletedLog || [];
+        log.unshift({
+          apptId: apptId,
+          client: clientName,
+          date: a.date,
+          startMin: a.startMin,
+          by: st,
+          at: Date.now()
+        });
+        if(log.length > 50) log = log.slice(0, 50);
+        DB().settings.deletedLog = log;
+      }catch(e){}
       saveDB();
       document.getElementById('sheetClose').click();
       setTimeout(function(){
         renderDay();
       }, 60);
-      S.toast('Deleted');
+      S.toast('Deleted' + (typeof actorLabel === 'function' ? ' · ' + actorLabel() : ''));
     });
   };
   document.getElementById('aEdit').onclick = function(){
@@ -3192,10 +3944,27 @@ function paymentSheet(a, onSaved){
   /* Existing "fully settled" flag */
   var fullyChecked = a.fullySettled ? 'checked' : '';
 
+  /* Received-by: default = current actor (or existing value) */
+  var recvOpts = '<option value="owner"'+(
+    (a.receivedBy && a.receivedBy.role==='owner' && !a.receivedBy.empId) ||
+    (!a.receivedBy && currentActor.role==='owner') ? ' selected' : ''
+  )+'>Owner</option>';
+  var empsAll = DB().employees || [];
+  for(var ei=0; ei<empsAll.length; ei++){
+    var em = empsAll[ei];
+    var sel = false;
+    if(a.receivedBy && a.receivedBy.empId === em.id) sel = true;
+    else if(!a.receivedBy && currentActor.role==='employee' && currentActor.empId === em.id) sel = true;
+    recvOpts += '<option value="'+em.id+'"'+(sel?' selected':'')+'>'+S.esc(em.nameAr)+'</option>';
+  }
+
   var html =
     '<h2>Mark as Paid</h2>' +
     '<div class="small muted">Enter the amount received in each currency. Leave blank for currencies you did not receive.</div>' +
     rows +
+    '<label style="margin-top:14px">Who received the money?</label>' +
+    '<select id="payReceivedBy">'+recvOpts+'</select>' +
+    '<div class="small muted">Required. Defaults to you. Change only if someone else is holding the cash.</div>' +
     '<label style="display:flex;align-items:flex-start;gap:8px;margin-top:14px;font-size:14px;color:var(--text)">' +
       '<input type="checkbox" id="payFully" '+fullyChecked+' style="width:auto;min-height:auto;margin-top:2px">' +
       '<span><b>This fully settles the bill</b><br>' +
@@ -3223,20 +3992,33 @@ function paymentSheet(a, onSaved){
       }
     }
     var fully = document.getElementById('payFully').checked;
+    var recvVal = document.getElementById('payReceivedBy').value;
+    var receivedBy = null;
+    if(recvVal === 'owner'){
+      receivedBy = { role:'owner', empId:null, name:'Owner' };
+    } else {
+      var re = S.empById(recvVal);
+      if(!re){ S.toast('Pick who received the money'); return; }
+      receivedBy = { role:'employee', empId: re.id, name: re.nameAr };
+    }
 
     if(Object.keys(paidMap).length === 0 && !fully){
       S.toast('Enter at least one amount or check "Fully settled"');
       return;
     }
 
+    var stamp = (typeof actorStamp === 'function') ? actorStamp() : { role:'owner', empId:null, name:'Owner', at:Date.now() };
     a.paid = paidMap;
     a.paidAt = Date.now();
+    a.paidBy = stamp;
+    a.receivedBy = receivedBy;
     a.fullySettled = fully ? true : false;
     if(!fully) delete a.fullySettled;
+    a.lastChangedBy = stamp;
     saveDB();
     document.getElementById('sheetClose').click();
     if(onSaved) onSaved();
-    S.toast('Payment saved');
+    S.toast('Payment saved · received by ' + receivedBy.name);
   };
 }
 
@@ -3304,10 +4086,11 @@ function newClientSheet(onSaved){
       '<button class="primary grow" id="ncSave">Save</button>' +
     '</div>'
   );
+  if(window.__wirePhone) window.__wirePhone('ncPhone');
   document.getElementById('ncCancel').onclick = function(){ document.getElementById('sheetClose').click(); };
   document.getElementById('ncSave').onclick = function(){
     var nameAr = document.getElementById('ncName').value.trim();
-    var phone = document.getElementById('ncPhone').value.trim();
+    var phone = document.getElementById('ncPhone').value.replace(/[^\d+]/g,'');
     if(!nameAr){ S.toast('Name required'); return; }
     if(phone){
       var existing = S.clientByPhone(phone);
@@ -3381,10 +4164,11 @@ function editClient(id){
       '<button class="primary grow" id="ecSave">Save</button>' +
     '</div>'
   );
+  if(window.__wirePhone) window.__wirePhone('ecPhone');
   document.getElementById('ecCancel').onclick = function(){ document.getElementById('sheetClose').click(); };
   document.getElementById('ecSave').onclick = function(){
     var nameAr = document.getElementById('ecName').value.trim();
-    var phone = document.getElementById('ecPhone').value.trim();
+    var phone = document.getElementById('ecPhone').value.replace(/[^\d+]/g,'');
     if(!nameAr){ S.toast('Name required'); return; }
     c.nameAr = nameAr; c.phone = phone;
     saveDB();
@@ -4481,7 +5265,7 @@ function doBackup(){
   var now = new Date();
   var db = DB();
   var info = describeData(db);
-  var fileStamp = S.ymd(now) + '_' + S.pad(now.getHours()) + '-' + S.pad(now.getMinutes());
+  var fileStamp = S.ymd(now) + '-' + S.pad(now.getHours()) + S.pad(now.getMinutes());
   var dows = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
   var payload = {
     backupInfo: {
@@ -4505,7 +5289,7 @@ function doBackup(){
     },
     data: db
   };
-  var fname = 'salon_backup_' + fileStamp + '.json';
+  var fname = 'limageBK-' + fileStamp + '.json';
   downloadBlob(JSON.stringify(payload, null, 2), fname, 'application/json');
   try{ localStorage.setItem(BACKUP_TS_KEY, String(now.getTime())); }catch(e){}
   S.toast('Backup downloaded: ' + fname);
@@ -4846,6 +5630,7 @@ document.addEventListener('click', function(e){
     }
     a.startMin = a.services[0].startMin;
     delete a.reminderSentAt;   /* time changed: client needs a fresh reminder */
+    if(typeof actorStamp === 'function') a.lastChangedBy = actorStamp();
     S.saveDB();
     cancelMoveMode();
     if(!sameColumn){
@@ -5055,6 +5840,7 @@ document.addEventListener('click', function(e){
     var totalMin = 0;
     for(var t=0;t<newServices.length;t++) totalMin += newServices[t].durationMin;
 
+    var cStamp = (typeof actorStamp === 'function') ? actorStamp() : { role:'owner', empId:null, name:'Owner', at:Date.now() };
     DB.appointments.push({
       id: S.uid(),
       date: dateYmd,
@@ -5066,7 +5852,9 @@ document.addEventListener('click', function(e){
       startMin: newServices[0].startMin,
       notes: a.notes || '',
       bookedOn: S.todayYmd(),
-      bookedAt: Date.now()
+      bookedAt: Date.now(),
+      bookedBy: cStamp,
+      lastChangedBy: cStamp
       /* no paid, no paidAt — fresh appointment */
     });
     S.saveDB();
@@ -5571,6 +6359,31 @@ function renderBackupBanner(){
   document.getElementById('bkNow').onclick = function(){ if(window.__doBackup) window.__doBackup(); };
 }
 window.renderRemindersPanel = renderRemindersPanel;
+
+/* Phone fields: numbers only (a leading + is allowed) and a live preview of the WhatsApp number */
+window.__wirePhone = function(inputId){
+  var inp = document.getElementById(inputId);
+  if(!inp) return;
+  inp.setAttribute('inputmode','tel');
+  inp.setAttribute('autocomplete','off');
+  var hint = document.createElement('div');
+  hint.className = 'small muted';
+  hint.style.marginTop = '4px';
+  inp.parentNode.insertBefore(hint, inp.nextSibling);
+  function clean(){
+    var v = inp.value;
+    var lead = v.charAt(0) === '+';
+    var d = v.replace(/\D/g,'');
+    var nv = (lead ? '+' : '') + d;
+    if(nv !== v) inp.value = nv;
+    if(!d){ hint.textContent = 'Numbers only, e.g. 0599123456'; hint.style.color = ''; return; }
+    var n = normalizePhone(inp.value, cfg().cc);
+    if(n){ hint.textContent = 'WhatsApp number: ' + n; hint.style.color = '#2e7d32'; }
+    else { hint.textContent = 'Too short or too long, check the digits'; hint.style.color = '#c62828'; }
+  }
+  inp.addEventListener('input', clean);
+  clean();
+};
 window.renderBackupBanner = renderBackupBanner;
 
 /* ---------- Reminder settings ---------- */
@@ -5680,5 +6493,19 @@ if(p0 && p0.left){ setTimeout(function(){ askConfirm(getPending()); }, 600); }
 })();
 </script>
 
+<script>
+/* Help tab: table-of-contents links scroll within the page */
+(function(){
+  var help = document.getElementById('tab-help');
+  if(!help) return;
+  help.addEventListener('click', function(e){
+    var a = e.target.closest ? e.target.closest('a[href^="#h-"]') : null;
+    if(!a) return;
+    e.preventDefault();
+    var t = document.getElementById(a.getAttribute('href').slice(1));
+    if(t && t.scrollIntoView) t.scrollIntoView({behavior:'smooth', block:'start'});
+  });
+})();
+</script>
 </body>
 </html>
